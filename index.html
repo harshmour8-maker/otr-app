@@ -2020,12 +2020,16 @@ const FB_KEY = 'AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw';
 
 async function fbRestGet(doc) {
   try {
-    const r = await fetch(FB_URL + doc + '?key=' + FB_KEY);
-    if (r.status === 404) return null;
-    if (!r.ok) return null;
+    const url = FB_URL + doc + '?key=' + FB_KEY;
+    console.log('fbRestGet:', url);
+    const r = await fetch(url);
+    console.log('fbRestGet status:', r.status);
+    if (r.status === 404) { console.log('fbRestGet: 404 not found'); return null; }
+    if (!r.ok) { console.log('fbRestGet: error', r.status); return null; }
     const j = await r.json();
+    console.log('fbRestGet success, keys:', Object.keys(j.fields||{}));
     return decodeFS(j.fields || {});
-  } catch(e) { return null; }
+  } catch(e) { console.log('fbRestGet error:', e.message); return null; }
 }
 
 async function fbRestSet(doc, obj) {
@@ -2166,6 +2170,7 @@ const ROLE_ACCESS = {
 const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
 
 async function loadUsers() {
+  console.log('loadUsers: starting...');
   // Always try Firestore first — this is the source of truth for all devices
   const d = await fbRestGet('users');
   if (d && d.list && d.list.length > 0) {
@@ -2208,6 +2213,7 @@ async function doLogin() {
     // Always fetch fresh from Firestore on login (never use cache)
     _cachedUsers = null;
     const users = await loadUsers();
+    console.log('LOGIN ATTEMPT:', u, '| Users found:', users.length, '| Users:', JSON.stringify(users.map(x=>x.username)));
     const match = users.find(x => x.username === u && x.password === p);
     if (!match) { err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
     err.style.display = 'none';
