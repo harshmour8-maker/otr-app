@@ -634,6 +634,16 @@
     <div class="spacer"></div>
     <button class="btn btn-primary" onclick="openUserModal()">+ Add User</button>
   </div>
+  <!-- Sync URL Setup -->
+  <div style="background:var(--main-card);border:1px solid var(--main-card-border);border-radius:12px;padding:20px;margin-bottom:24px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--main-text-muted);margin-bottom:8px;">Cross-Device Sync URL</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input class="form-input" id="gasUrlInput" placeholder="Paste your Apps Script Web App URL here" style="flex:1;" value=""/>
+      <button class="btn btn-primary" onclick="saveGasUrl()">Save URL</button>
+      <button class="btn btn-secondary" onclick="testGasUrl()">Test</button>
+    </div>
+    <div style="font-size:11px;color:var(--main-text-muted);margin-top:8px;" id="gasUrlStatus"></div>
+  </div>
   <div class="table-card table-wrap" style="margin-bottom:32px;">
     <table><thead><tr><th>#</th><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr></thead>
     <tbody id="userTableBody"></tbody></table>
@@ -2008,66 +2018,70 @@ function toggleSidebar(){document.getElementById('mainSidebar').classList.toggle
 function closeSidebar(){document.getElementById('mainSidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
 
 
+// ========== SYNC URL MANAGEMENT ==========
+function saveGasUrl() {
+  const url = document.getElementById('gasUrlInput').value.trim();
+  if (!url) { alert('Please enter a URL.'); return; }
+  GAS_URL = url;
+  localStorage.setItem('otr_gas_url', url);
+  document.getElementById('gasUrlStatus').textContent = '✓ URL saved. Click Test to verify.';
+  document.getElementById('gasUrlStatus').style.color = '#4ade80';
+}
+
+async function testGasUrl() {
+  const url = document.getElementById('gasUrlInput').value.trim();
+  if (!url) { alert('Enter a URL first.'); return; }
+  GAS_URL = url;
+  const statusEl = document.getElementById('gasUrlStatus');
+  statusEl.textContent = 'Testing...';
+  statusEl.style.color = 'var(--main-text-muted)';
+  const result = await fbRestGet('test');
+  if (result !== null || GAS_URL) {
+    // Try a set
+    const ok = await fbRestSet('test', {ping: Date.now()});
+    if (ok) {
+      statusEl.textContent = '✓ Connected! Sync is working.';
+      statusEl.style.color = '#4ade80';
+      localStorage.setItem('otr_gas_url', url);
+    } else {
+      statusEl.textContent = '⚠ Could not write. Check Apps Script permissions.';
+      statusEl.style.color = '#f87171';
+    }
+  } else {
+    statusEl.textContent = '⚠ Could not connect. Check the URL.';
+    statusEl.style.color = '#f87171';
+  }
+}
+
 // ========== MODAL CLOSE ON BACKDROP ==========
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
 
 
-// ========== HYBRID DATABASE (localStorage + Firestore REST) ==========
-// localStorage = instant local access on every device after first load
-// Firestore REST = syncs data across devices when online
-const FB_URL = 'https://firestore.googleapis.com/v1/projects/otr-app-01/databases/(default)/documents/otr_data/';
-const FB_KEY = 'AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw';
+// ========== DATABASE: Google Apps Script Web App ==========
+// Uses Google Apps Script as backend - works on any network
+// Set up URL in User Management page
+let GAS_URL = localStorage.getItem('otr_gas_url') || '';
 
 async function fbRestGet(doc) {
+  if (!GAS_URL) return null;
   try {
-    const url = FB_URL + doc + '?key=' + FB_KEY;
-    const r = await fetch(url);
-    if (r.status === 404) return null;
+    const r = await fetch(GAS_URL + '?action=get&doc=' + doc, {redirect:'follow'});
     if (!r.ok) return null;
     const j = await r.json();
-    return decodeFS(j.fields || {});
-  } catch(e) { console.log('fbRestGet error:', e.message); return null; }
+    return j.data || null;
+  } catch(e) { return null; }
 }
 
 async function fbRestSet(doc, obj) {
+  if (!GAS_URL) return false;
   try {
-    const r = await fetch(FB_URL + doc + '?key=' + FB_KEY, {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({fields: encodeFS(obj)})
+    // Use GET with body as encoded parameter to avoid CORS/POST issues with Apps Script
+    const body = encodeURIComponent(JSON.stringify(obj));
+    const r = await fetch(GAS_URL + '?action=set&doc=' + doc + '&body=' + body, {
+      redirect: 'follow'
     });
     return r.ok;
   } catch(e) { return false; }
-}
-
-function decodeFS(fields) {
-  const o = {};
-  for (const [k,v] of Object.entries(fields)) o[k] = decodeVal(v);
-  return o;
-}
-function decodeVal(v) {
-  if ('stringValue' in v) return v.stringValue;
-  if ('integerValue' in v) return parseInt(v.integerValue);
-  if ('doubleValue' in v) return v.doubleValue;
-  if ('booleanValue' in v) return v.booleanValue;
-  if ('nullValue' in v) return null;
-  if ('arrayValue' in v) return (v.arrayValue.values||[]).map(decodeVal);
-  if ('mapValue' in v) return decodeFS(v.mapValue.fields||{});
-  return null;
-}
-function encodeFS(obj) {
-  const f = {};
-  for (const [k,v] of Object.entries(obj)) f[k] = encodeVal(v);
-  return f;
-}
-function encodeVal(v) {
-  if (v===null||v===undefined) return {nullValue:null};
-  if (typeof v==='boolean') return {booleanValue:v};
-  if (typeof v==='number') return Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v};
-  if (typeof v==='string') return {stringValue:v};
-  if (Array.isArray(v)) return {arrayValue:{values:v.map(encodeVal)}};
-  if (typeof v==='object') return {mapValue:{fields:encodeFS(v)}};
-  return {stringValue:String(v)};
 }
 
 function showLoadingOverlay(msg) {
@@ -2202,7 +2216,7 @@ async function saveUsers(users) {
   const ok1 = await fbRestSet('users', { list: users });
   const ok2 = await fbRestSet('main', {employees, sites, loans, stockItems, attendance, saleVouchers, saleCounter, vendors, userList: users, updatedAt: Date.now()});
   if (!ok1 && !ok2) {
-    alert('⚠ User saved locally only.\nFirestore sync failed — your network may be blocking Google services.\nPlease add users from your phone (mobile data) for cross-device access.');
+    alert('⚠ User saved locally only.\nSync failed — please set up your Apps Script URL in User Management settings for cross-device access.');
   }
 }
 async function getUsers() {
@@ -2375,6 +2389,41 @@ async function loadRolePermissions() {
   }
 }
 
+// ========== SYNC URL MANAGEMENT ==========
+function saveGasUrl() {
+  const url = document.getElementById('gasUrlInput').value.trim();
+  if (!url) { alert('Please enter a URL.'); return; }
+  GAS_URL = url;
+  localStorage.setItem('otr_gas_url', url);
+  document.getElementById('gasUrlStatus').textContent = '✓ URL saved. Click Test to verify.';
+  document.getElementById('gasUrlStatus').style.color = '#4ade80';
+}
+
+async function testGasUrl() {
+  const url = document.getElementById('gasUrlInput').value.trim();
+  if (!url) { alert('Enter a URL first.'); return; }
+  GAS_URL = url;
+  const statusEl = document.getElementById('gasUrlStatus');
+  statusEl.textContent = 'Testing...';
+  statusEl.style.color = 'var(--main-text-muted)';
+  const result = await fbRestGet('test');
+  if (result !== null || GAS_URL) {
+    // Try a set
+    const ok = await fbRestSet('test', {ping: Date.now()});
+    if (ok) {
+      statusEl.textContent = '✓ Connected! Sync is working.';
+      statusEl.style.color = '#4ade80';
+      localStorage.setItem('otr_gas_url', url);
+    } else {
+      statusEl.textContent = '⚠ Could not write. Check Apps Script permissions.';
+      statusEl.style.color = '#f87171';
+    }
+  } else {
+    statusEl.textContent = '⚠ Could not connect. Check the URL.';
+    statusEl.style.color = '#f87171';
+  }
+}
+
 // ========== MODAL CLOSE ON BACKDROP ==========
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
 
@@ -2382,6 +2431,10 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 window.addEventListener('load', async () => {
   await load();
   await loadRolePermissions();
+  // Populate GAS URL input if saved
+  const savedUrl = localStorage.getItem('otr_gas_url') || '';
+  const gasInput = document.getElementById('gasUrlInput');
+  if (gasInput && savedUrl) gasInput.value = savedUrl;
   document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   populateSiteSelects();
   renderDashboard();
