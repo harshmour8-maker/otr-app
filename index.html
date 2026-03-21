@@ -2021,13 +2021,10 @@ const FB_KEY = 'AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw';
 async function fbRestGet(doc) {
   try {
     const url = FB_URL + doc + '?key=' + FB_KEY;
-    console.log('fbRestGet:', url);
     const r = await fetch(url);
-    console.log('fbRestGet status:', r.status);
-    if (r.status === 404) { console.log('fbRestGet: 404 not found'); return null; }
-    if (!r.ok) { console.log('fbRestGet: error', r.status); return null; }
+    if (r.status === 404) return null;
+    if (!r.ok) return null;
     const j = await r.json();
-    console.log('fbRestGet success, keys:', Object.keys(j.fields||{}));
     return decodeFS(j.fields || {});
   } catch(e) { console.log('fbRestGet error:', e.message); return null; }
 }
@@ -2091,7 +2088,9 @@ function hideLoadingOverlay() {
 
 // ========== PERSISTENCE ==========
 async function save() {
-  const data = {employees, sites, loans, stockItems, attendance, saleVouchers, saleCounter, vendors, updatedAt: Date.now()};
+  // Include users in main save so they sync cross-device with everything else
+  const userList = _cachedUsers || [];
+  const data = {employees, sites, loans, stockItems, attendance, saleVouchers, saleCounter, vendors, userList, updatedAt: Date.now()};
   // Always save to localStorage first (instant, works offline)
   try { localStorage.setItem('otr_local_main', JSON.stringify(data)); } catch(e){}
   // Then try to sync to Firestore (for cross-device)
@@ -2119,6 +2118,11 @@ async function load() {
     saleVouchers = d.saleVouchers || [];
     saleCounter  = d.saleCounter  || 1;
     vendors      = d.vendors      || DEFAULT_VENDORS;
+    // Load users from main doc if available (cross-device sync)
+    if (d.userList && d.userList.length > 0) {
+      _cachedUsers = d.userList;
+      try { localStorage.setItem('otr_local_users', JSON.stringify(d.userList)); } catch(e) {}
+    }
   } else {
     employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
     stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
@@ -2170,7 +2174,6 @@ const ROLE_ACCESS = {
 const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
 
 async function loadUsers() {
-  console.log('loadUsers: starting...');
   // Always try Firestore first — this is the source of truth for all devices
   const d = await fbRestGet('users');
   if (d && d.list && d.list.length > 0) {
@@ -2195,8 +2198,12 @@ async function loadUsers() {
 async function saveUsers(users) {
   _cachedUsers = users;
   try { localStorage.setItem('otr_local_users', JSON.stringify(users)); } catch(e) {}
-  // Await Firestore write so new users are available cross-device immediately
-  await fbRestSet('users', { list: users });
+  // Save to Firestore - this is required for cross-device sync
+  const ok1 = await fbRestSet('users', { list: users });
+  const ok2 = await fbRestSet('main', {employees, sites, loans, stockItems, attendance, saleVouchers, saleCounter, vendors, userList: users, updatedAt: Date.now()});
+  if (!ok1 && !ok2) {
+    alert('⚠ User saved locally only.\nFirestore sync failed — your network may be blocking Google services.\nPlease add users from your phone (mobile data) for cross-device access.');
+  }
 }
 async function getUsers() {
   if (_cachedUsers) return _cachedUsers;
@@ -2213,7 +2220,6 @@ async function doLogin() {
     // Always fetch fresh from Firestore on login (never use cache)
     _cachedUsers = null;
     const users = await loadUsers();
-    console.log('LOGIN ATTEMPT:', u, '| Users found:', users.length, '| Users:', JSON.stringify(users.map(x=>x.username)));
     const match = users.find(x => x.username === u && x.password === p);
     if (!match) { err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
     err.style.display = 'none';
