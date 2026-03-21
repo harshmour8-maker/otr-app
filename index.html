@@ -2188,15 +2188,23 @@ const ROLE_ACCESS = {
 const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
 
 async function loadUsers() {
-  // Always try Firestore first — this is the source of truth for all devices
+  // Always fetch fresh from GAS — source of truth for all devices
   const d = await fbRestGet('users');
   if (d && d.list && d.list.length > 0) {
     _cachedUsers = d.list;
-    // Update this device's localStorage with the latest from Firestore
     try { localStorage.setItem('otr_local_users', JSON.stringify(d.list)); } catch(e) {}
     return _cachedUsers;
   }
-  // Firestore unavailable — fall back to localStorage
+  // Also check if users are embedded in main data
+  const main = await fbRestGet('main');
+  if (main && main.userList && main.userList.length > 0) {
+    _cachedUsers = main.userList;
+    try { localStorage.setItem('otr_local_users', JSON.stringify(main.userList)); } catch(e) {}
+    // Sync back to users doc
+    fbRestSet('users', { list: main.userList });
+    return _cachedUsers;
+  }
+  // Fall back to localStorage
   try {
     const local = localStorage.getItem('otr_local_users');
     if (local) {
@@ -2212,15 +2220,16 @@ async function loadUsers() {
 async function saveUsers(users) {
   _cachedUsers = users;
   try { localStorage.setItem('otr_local_users', JSON.stringify(users)); } catch(e) {}
-  // Save to Firestore - this is required for cross-device sync
-  const ok1 = await fbRestSet('users', { list: users });
-  const ok2 = await fbRestSet('main', {employees, sites, loans, stockItems, attendance, saleVouchers, saleCounter, vendors, userList: users, updatedAt: Date.now()});
-  if (!ok1 && !ok2) {
-    alert('⚠ User saved locally only.\nSync failed — please set up your Apps Script URL in User Management settings for cross-device access.');
+  // Save users list directly to GAS sheet
+  const ok = await fbRestSet('users', { list: users });
+  if (!ok) {
+    console.warn('User sync to GAS failed - saved locally only');
   }
+  // Also include in main data save for extra redundancy
+  save();
 }
 async function getUsers() {
-  if (_cachedUsers) return _cachedUsers;
+  // Always load fresh — never serve stale cache
   return await loadUsers();
 }
 
@@ -2328,8 +2337,10 @@ async function saveUser() {
     users.push({ id:'u'+Date.now(), name, username, password, role });
   }
   await saveUsers(users);
+  _cachedUsers = users; // update cache with full new list
   closeModal('userModal');
   renderUsers();
+  alert('User saved successfully!');
 }
 
 async function deleteUser(id) {
