@@ -6,9 +6,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Clear Ice Industries">
+<meta name="apple-mobile-web-app-title" content="CII">
 <meta name="theme-color" content="#111111">
-<meta name="description" content="Clear Ice Industries · Stock & Payroll">
+<meta name="description" content="Clear Ice Industries - Stock & Payroll">
 <title>Clear Ice Industries · Stock & Payroll</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -259,9 +259,6 @@
     th,td{white-space:nowrap}
   }
 </style>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -269,9 +266,9 @@
 <div id="loginOverlay">
   <div class="login-box">
     <div class="login-logo">
-      <div class="login-logo-badge">CII</div>
+      <div class="login-logo-badge" style="font-size:10px">CII</div>
       <div>
-        <div class="login-logo-name">Clear Ice Industries</div>
+        <div class="login-logo-name">On The Rocks</div>
         <div class="login-logo-sub">GSTIN: 18AIOPG8152B2Z9</div>
       </div>
     </div>
@@ -332,7 +329,7 @@
   </nav>
   <div class="sidebar-footer">
     <div class="company-info">
-      <div class="company-avatar">CII</div>
+      <div class="company-avatar" style="font-size:10px">CII</div>
       <div>
         <div class="company-name">Clear Ice Industries</div>
         <div class="company-sub" id="loginUserBadge">—</div>
@@ -475,6 +472,8 @@
   </div>
 </div>
 
+
+
 <!-- VENDOR MASTER -->
 <div class="page hidden" id="page-vendors">
   <div class="section-header" style="flex-wrap:wrap;gap:10px;">
@@ -524,7 +523,7 @@
           <div style="font-family:'Bebas Neue';font-size:18px;letter-spacing:1px;margin-bottom:20px;">VOUCHER DETAILS</div>
           <div class="form-row"><div class="form-group"><div class="form-label">Voucher No.</div><input class="form-input" id="saleVoucherNo" readonly/></div><div class="form-group"><div class="form-label">Date</div><input class="form-input" id="saleDate" type="date"/></div></div>
           <div class="form-row"><div class="form-group"><div class="form-label">PO Number</div><input class="form-input" id="salePONumber" placeholder="PO-XXXX (optional)"/></div><div class="form-group"><div class="form-label">Customer / Vendor Name</div><input class="form-input" id="saleCustomer" placeholder="Type or select from vendor master" list="vendorDatalist" oninput="onVendorNameInput(this.value)" autocomplete="off"/><datalist id="vendorDatalist"></datalist></div></div>
-          <div class="form-row"><div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="salePhone" placeholder="9XXXXXXXXX"/></div><div style="display:none"><select id="saleSite"><option value="S1">Main Site</option></select></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="salePhone" placeholder="9XXXXXXXXX"/></div><div style="display:none"><select id="saleSite"><option value="S1">Main</option></select></div></div>
           <div style="margin-top:-8px;margin-bottom:4px"><button type="button" class="btn btn-secondary btn-sm" onclick="showPage('vendors',null)" style="font-size:11px;padding:4px 10px">🏢 Browse Vendor Master</button></div>
           <div class="form-row"><div class="form-group"><div class="form-label">GST Type</div><select class="form-select" id="saleGstType" onchange="updateGstLabel()"><option value="none">No GST</option><option value="gst">GST (CGST+SGST)</option><option value="igst">IGST (Inter-state)</option></select></div><div class="form-group"><div class="form-label">GST Rate (%)</div><select class="form-select" id="saleGstRate" onchange="recalcSale()"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div></div>
           <div class="form-row single"><div class="form-group"><div class="form-label">Payment Mode</div><select class="form-select" id="salePayMode"><option>Cash</option><option>UPI</option><option>Cheque</option><option>Credit (Party)</option></select></div></div>
@@ -619,7 +618,7 @@
   </div>
   <div class="table-card" style="padding:24px">
     <div class="form-row">
-      <div class="form-group"><div class="form-label">Company Name in Tally</div><input class="form-input" value="Clear Ice Industriesdustries Premium Ice Cubes"/></div>
+      <div class="form-group"><div class="form-label">Company Name in Tally</div><input class="form-input" value="On The Rocks Premium Ice Cubes"/></div>
       <div class="form-group"><div class="form-label">Tally HTTP Port</div><input class="form-input" value="9000"/></div>
     </div>
     <div class="form-row">
@@ -635,16 +634,10 @@
     <div class="spacer"></div>
     <button class="btn btn-primary" onclick="openUserModal()">+ Add User</button>
   </div>
-
-  <!-- Users Table -->
   <div class="table-card table-wrap" style="margin-bottom:32px;">
-    <table>
-      <thead><tr><th>#</th><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr></thead>
-      <tbody id="userTableBody"></tbody>
-    </table>
+    <table><thead><tr><th>#</th><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr></thead>
+    <tbody id="userTableBody"></tbody></table>
   </div>
-
-  <!-- Role Permissions Editor -->
   <div class="section-header">
     <div><div class="section-title">Role Permissions</div><div class="section-subtitle">Choose which pages each role can access</div></div>
     <div class="spacer"></div>
@@ -652,15 +645,13 @@
   </div>
   <div style="background:var(--main-card);border:1px solid var(--main-card-border);border-radius:12px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;">
-      <thead>
-        <tr style="background:var(--main-thead);border-bottom:1.5px solid var(--main-card-border);">
-          <th style="padding:12px 16px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--main-text-muted);">Page</th>
-          <th style="padding:12px 16px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#4ade80;">Admin</th>
-          <th style="padding:12px 16px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#60a5fa;">Manager</th>
-          <th style="padding:12px 16px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#facc15;">Staff</th>
-          <th style="padding:12px 16px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#fb923c;">Sales</th>
-        </tr>
-      </thead>
+      <thead><tr style="background:var(--main-thead);border-bottom:1.5px solid var(--main-card-border);">
+        <th style="padding:12px 16px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--main-text-muted);">Page</th>
+        <th style="padding:12px 16px;text-align:center;font-size:10.5px;color:#4ade80;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Admin</th>
+        <th style="padding:12px 16px;text-align:center;font-size:10.5px;color:#60a5fa;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Manager</th>
+        <th style="padding:12px 16px;text-align:center;font-size:10.5px;color:#facc15;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Staff</th>
+        <th style="padding:12px 16px;text-align:center;font-size:10.5px;color:#fb923c;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Sales</th>
+      </tr></thead>
       <tbody id="rolePermTable"></tbody>
     </table>
   </div>
@@ -713,7 +704,7 @@
       <div class="form-group"><div class="form-label" id="empWageLabel">Daily Wage (₹) *</div><input class="form-input" id="empWage" placeholder="500" type="number"/></div>
     </div>
     <div class="form-row">
-<div style="display:none"><select id="empSite"><option value="S1">Main Site</option></select></div>
+<div style="display:none"><select id="empSite"><option value="S1">Main</option></select></div>
       <div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="empPhone" placeholder="9XXXXXXXXX" type="tel"/></div>
     </div>
     <div class="form-row">
@@ -761,28 +752,7 @@
 </div>
 
 <!-- STOCK MODAL -->
-<div class="modal-overlay" id="stockModal">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="stockModalTitle">ADD STOCK ITEM</div><button class="modal-close" onclick="closeModal('stockModal')">✕</button></div>
-    <div class="form-row">
-      <div class="form-group"><div class="form-label">Item Name *</div><input class="form-input" id="siName" placeholder="Item name"/></div>
-      <div class="form-group"><div class="form-label">Category</div><select class="form-select" id="siCat"><option>Refrigeration</option><option>Packaging</option><option>Chemicals</option><option>Electrical</option><option>Tools</option><option>Other</option></select></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><div class="form-label">Quantity *</div><input class="form-input" id="siQty" placeholder="100" type="number"/></div>
-      <div class="form-group"><div class="form-label">Min Level</div><input class="form-input" id="siMin" placeholder="20" type="number"/></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><div class="form-label">Rate (₹) *</div><input class="form-input" id="siRate" placeholder="500" type="number"/></div>
-<div style="display:none"><select id="siSite"><option value="S1">Main Site</option></select></div>
-    </div>
-    <div class="form-row single"><div class="form-group"><div class="form-label">Supplier</div><input class="form-input" id="siSupplier" placeholder="Supplier name"/></div></div>
-    <div class="form-actions">
-      <button class="btn btn-secondary" onclick="closeModal('stockModal')">Cancel</button>
-      <button class="btn btn-primary" id="siSaveBtn" onclick="saveStockItem()">Add Item</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- VENDOR MODAL -->
 <div class="modal-overlay" id="vendorModal">
@@ -845,6 +815,9 @@
   </div>
 </div>
 
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ========== DEFAULT DATA ==========
 const DEFAULT_EMPLOYEES = [
@@ -879,293 +852,17 @@ const DEFAULT_VENDORS = [
   {id:'V003',name:'Hotel Paradise',category:'Hotel / Restaurant',phone:'9101200001',email:'',gstin:'',state:'Assam',address:'Nalbari',creditLimit:0,payMode:'UPI',notes:'Weekly delivery'}
 ];
 
+
 // ========== STATE ==========
 let employees=[], sites=[], loans=[], stockItems=[], attendance={}, saleVouchers=[], saleCurrentItems=[], saleCounter=1, vendors=[];
 let editEmpIdx=-1, editLoanIdx=-1, editStockIdx=-1, editSiteIdx=-1, editQtyIdx=-1, editVendorIdx=-1;
+let _cachedUsers = null;
+let currentUser = null;
 // Date-keyed attendance: attendance['2026-03-21']['EMP001'] = 'P'|'A'|'H'
 // currentAttDate: which date is visible in the attendance register
 let currentAttDate = (()=>{ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); })();
 // Payroll month/year selector (YYYY-MM)
 let currentPayrollMonth = (()=>{ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); })();
-
-
-// ========== FIREBASE SETUP (compat SDK) ==========
-const firebaseConfig = {
-  apiKey: "AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw",
-  authDomain: "otr-app-01.firebaseapp.com",
-  projectId: "otr-app-01",
-  storageBucket: "otr-app-01.firebasestorage.app",
-  messagingSenderId: "157101499108",
-  appId: "1:157101499108:web:82ae28524520286fc542f1",
-  measurementId: "G-BLB5VXHW5R"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-function showLoadingOverlay(msg) {
-  let el = document.getElementById('fbLoadingOverlay');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'fbLoadingOverlay';
-    el.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:DM Sans,sans-serif;color:white;gap:16px;';
-    el.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:2px;">CLEAR ICE</div><div id="fbLoadingMsg" style="font-size:13px;color:rgba(255,255,255,0.5)"></div><div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
-    document.body.appendChild(el);
-  }
-  document.getElementById('fbLoadingMsg').textContent = msg || 'Loading...';
-}
-function hideLoadingOverlay() {
-  const el = document.getElementById('fbLoadingOverlay');
-  if (el) el.remove();
-}
-
-// ========== PERSISTENCE (Firebase compat) ==========
-async function save() {
-  try {
-    await db.collection('otr_data').doc('main').set({
-      employees, sites, loans, stockItems, attendance,
-      saleVouchers, saleCounter, vendors,
-      updatedAt: Date.now()
-    });
-  } catch(e) {
-    console.error('Firebase save error:', e);
-    alert('⚠ Save failed. Check your internet connection.');
-  }
-}
-
-async function load() {
-  showLoadingOverlay('Connecting to database...');
-  try {
-    const snap = await db.collection('otr_data').doc('main').get();
-    if (snap.exists) {
-      const d = snap.data();
-      employees    = d.employees    || DEFAULT_EMPLOYEES;
-      sites        = d.sites        || DEFAULT_SITES;
-      loans        = d.loans        || DEFAULT_LOANS;
-      stockItems   = d.stockItems   || DEFAULT_STOCK;
-      attendance   = d.attendance   || {};
-      saleVouchers = d.saleVouchers || [];
-      saleCounter  = d.saleCounter  || 1;
-      vendors      = d.vendors      || DEFAULT_VENDORS;
-    } else {
-      employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
-      stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
-      await save();
-    }
-  } catch(e) {
-    console.error('Firebase load error:', e);
-    alert('⚠ Could not connect to database. Check your internet connection and try again.');
-    employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
-    stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
-  }
-  hideLoadingOverlay();
-}
-
-async function resetAllData() {
-  if (!confirm('Reset ALL data to factory defaults? This cannot be undone.')) return;
-  employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
-  stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
-  await save(); renderDashboard(); alert('Reset complete.');
-}
-
-function exportData() {
-  const d = {employees,sites,loans,stockItems,attendance,saleVouchers,saleCounter,vendors,ts:new Date().toISOString()};
-  const a = document.createElement('a');
-  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d,null,2));
-  a.download = 'ClearIce_Backup_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
-}
-
-function importData() {
-  const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
-  inp.onchange = e => {
-    const fr = new FileReader();
-    fr.onload = async ev => {
-      try {
-        const d = JSON.parse(ev.target.result);
-        if (!d.employees) throw new Error('Invalid file');
-        employees=d.employees||[]; sites=d.sites||[]; loans=d.loans||[];
-        stockItems=d.stockItems||[]; attendance=d.attendance||{};
-        saleVouchers=d.saleVouchers||[]; saleCounter=d.saleCounter||1; vendors=d.vendors||DEFAULT_VENDORS;
-        await save(); renderDashboard(); alert('Backup imported successfully!');
-      } catch(err) { alert('Invalid backup file: ' + err.message); }
-    };
-    fr.readAsText(e.target.files[0]);
-  };
-  inp.click();
-}
-
-// ========== LOGIN / ROLE SYSTEM ==========
-const ROLE_ACCESS = {
-  admin:   ['dashboard','employees','attendance','payroll','loans','stock','sales','vendors','tally','usermgmt'],
-  manager: ['dashboard','employees','attendance','payroll','loans','stock','sales','vendors','tally'],
-  staff:   ['dashboard','attendance'],
-  sales:   ['dashboard','sales','vendors'],
-};
-const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
-let currentUser = null;
-let _cachedUsers = null;
-
-async function loadUsers() {
-  try {
-    const snap = await db.collection('otr_data').doc('users').get();
-    if (snap.exists) {
-      _cachedUsers = snap.data().list || [];
-      return _cachedUsers;
-    }
-  } catch(e) { console.error('loadUsers error', e); }
-  const defaults = [{ id:'u1', name:'Admin', username:'admin', password:'admin123', role:'admin' }];
-  await saveUsers(defaults);
-  return defaults;
-}
-
-async function saveUsers(users) {
-  _cachedUsers = users;
-  try {
-    await db.collection('otr_data').doc('users').set({ list: users });
-  } catch(e) { console.error('saveUsers error', e); alert('⚠ Could not save users.'); }
-}
-
-async function getUsers() {
-  if (_cachedUsers) return _cachedUsers;
-  return await loadUsers();
-}
-
-async function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const err = document.getElementById('loginError');
-  const btn = document.querySelector('.login-btn');
-  btn.textContent = 'Signing in...'; btn.disabled = true;
-  try {
-    const users = await getUsers();
-    const match = users.find(x => x.username === u && x.password === p);
-    if (!match) { err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
-    err.style.display='none';
-    currentUser = match;
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.getElementById('loginUserBadge').textContent = match.name + ' · ' + (ROLE_LABELS[match.role]||match.role);
-    applyRoleAccess(match.role);
-    const first = ROLE_ACCESS[match.role]?.[0] || 'dashboard';
-    const navBtn = document.querySelector(`.nav-item[onclick*="showPage('${first}'"]`);
-    showPage(first, navBtn);
-  } catch(e) { alert('Login error. Check your internet connection.'); }
-  btn.textContent = 'Sign In →'; btn.disabled = false;
-}
-
-function doLogout() {
-  currentUser = null;
-  document.getElementById('loginUser').value = '';
-  document.getElementById('loginPass').value = '';
-  document.getElementById('loginOverlay').classList.remove('hidden');
-}
-
-function applyRoleAccess(role) {
-  const allowed = ROLE_ACCESS[role] || [];
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    const m = (btn.getAttribute('onclick')||'').match(/showPage\('([^']+)'/);
-    if (m) btn.style.display = allowed.includes(m[1]) ? '' : 'none';
-  });
-  const adminSection = document.getElementById('navSectionAdmin');
-  if (adminSection) adminSection.style.display = (role==='admin') ? '' : 'none';
-  const addBtn = document.getElementById('topbarAddBtn');
-  if (addBtn) addBtn.style.display = (role==='admin'||role==='manager') ? '' : 'none';
-}
-
-function canAccess(page) {
-  if (!currentUser) return false;
-  return (ROLE_ACCESS[currentUser.role] || []).includes(page);
-}
-
-// ========== USER MANAGEMENT ==========
-let editingUserId = null;
-
-async function renderUsers() {
-  const users = await getUsers();
-  const tbody = document.getElementById('userTableBody');
-  if (!tbody) return;
-  const roleColors = {admin:'#4ade80',manager:'#60a5fa',staff:'#facc15',sales:'#fb923c'};
-  const roleBg = {admin:'rgba(74,222,128,0.12)',manager:'rgba(96,165,250,0.12)',staff:'rgba(250,204,21,0.12)',sales:'rgba(251,146,60,0.12)'};
-  tbody.innerHTML = users.map((u,i) => `
-    <tr>
-      <td style="color:var(--main-text-muted);font-family:'DM Mono';font-size:11px">${i+1}</td>
-      <td><div class="emp-name">${u.name}</div></td>
-      <td><span style="font-family:'DM Mono';font-size:12px;color:var(--main-text)">${u.username}</span></td>
-      <td><span style="font-family:'DM Mono';font-size:12px;color:var(--main-text-muted);letter-spacing:2px">••••••</span></td>
-      <td><span class="badge-pill" style="background:${roleBg[u.role]};color:${roleColors[u.role]}">${ROLE_LABELS[u.role]||u.role}</span></td>
-      <td class="actions-cell">
-        <button class="btn btn-secondary btn-sm" onclick="editUser('${u.id}')">Edit</button>
-        ${u.id !== currentUser?.id ? '<button class="btn btn-danger btn-sm" onclick="deleteUser(\'+u.id+\')">Delete<\/button>' : '<span style="font-size:11px;color:var(--main-text-muted)">(you)</span>'}
-      </td>
-    </tr>`).join('');
-}
-
-async function openUserModal(id) {
-  editingUserId = id || null;
-  const modal = document.getElementById('userModal');
-  document.getElementById('userModalTitle').textContent = id ? 'EDIT USER' : 'ADD USER';
-  if (id) {
-    const u = (await getUsers()).find(x=>x.id===id);
-    if (!u) return;
-    document.getElementById('uName').value = u.name;
-    document.getElementById('uUsername').value = u.username;
-    document.getElementById('uPassword').value = u.password;
-    document.getElementById('uRole').value = u.role;
-  } else {
-    document.getElementById('uName').value = '';
-    document.getElementById('uUsername').value = '';
-    document.getElementById('uPassword').value = '';
-    document.getElementById('uRole').value = 'staff';
-  }
-  modal.classList.add('open');
-}
-
-function editUser(id) { openUserModal(id); }
-
-async function saveUser() {
-  const name = document.getElementById('uName').value.trim();
-  const username = document.getElementById('uUsername').value.trim();
-  const password = document.getElementById('uPassword').value.trim();
-  const role = document.getElementById('uRole').value;
-  if (!name||!username||!password) { alert('Please fill in all fields.'); return; }
-  const users = await getUsers();
-  const dupe = users.find(x => x.username===username && x.id!==editingUserId);
-  if (dupe) { alert('Username "'+username+'" is already taken.'); return; }
-  if (editingUserId) {
-    const idx = users.findIndex(x=>x.id===editingUserId);
-    if (idx>-1) users[idx] = {...users[idx], name, username, password, role};
-  } else {
-    users.push({ id:'u'+Date.now(), name, username, password, role });
-  }
-  await saveUsers(users);
-  closeModal('userModal');
-  renderUsers();
-}
-
-async function deleteUser(id) {
-  if (!confirm('Delete this user?')) return;
-  const users = (await getUsers()).filter(x=>x.id!==id);
-  await saveUsers(users);
-  renderUsers();
-}
-
-      stockItems   = d.stockItems   || DEFAULT_STOCK;
-      attendance   = d.attendance   || {};
-      saleVouchers = d.saleVouchers || [];
-      saleCounter  = d.saleCounter  || 1;
-      vendors      = d.vendors      || DEFAULT_VENDORS;
-    } else {
-      // First time - seed with defaults and save
-      employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
-      stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
-      await save();
-    }
-  } catch(e) {
-    console.error('Firebase load error:', e);
-    alert('⚠ Could not connect to database. Check your internet connection and try again.');
-    employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
-    stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
-  }
-  hideLoadingOverlay();
-}
 
 
 // ========== HELPERS ==========
@@ -1176,12 +873,12 @@ function stockStatus(qty,min){const r=qty/Math.max(min,1); return r>=1?'ok':r>=0
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 function openModal(id){document.getElementById(id).classList.add('open')}
 function populateSiteSelects(){
-  // Single-site mode: fixed to S1
   ['empSite','siSite','saleSite'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     el.innerHTML='<option value="S1">Main Site</option>';
   });
 }
+
 
 // ========== NAVIGATION ==========
 const PAGE_TITLES={
@@ -1230,8 +927,9 @@ function showPage(page,btn){
   else if(page==='dashboard') renderDashboard();
   else if(page==='sales') initSaleForm();
   else if(page==='vendors') renderVendors();
-  else if(page==='usermgmt') { renderUsers(); renderRolePermissions(); }
+  else if(page==='usermgmt') renderUsers();
 }
+
 
 // ========== DASHBOARD ==========
 function renderDashboard(){
@@ -1266,6 +964,7 @@ function renderDashboard(){
     dl.innerHTML+=`<div class="loan-row"><div class="loan-emp">${emp?.name||l.empId}</div><div class="loan-meta">${l.purpose} · EMI ${fmt(l.emi)}/mo</div><div class="progress-wrap"><div class="progress-bar ${pct>70?'full':pct>30?'warn':''}" style="width:${pct}%"></div></div><div class="loan-amounts"><span>Paid: ${fmt(l.paid)}</span><span>Balance: ${fmt(l.amount-l.paid)}</span></div></div>`;
   });
 }
+
 
 // ========== EMPLOYEES ==========
 function renderEmployees(){
@@ -1346,6 +1045,7 @@ function deleteEmployee(i){
   save(); renderEmployees(); renderDashboard();
 }
 
+
 // ========== ATTENDANCE ==========
 function getAttForDate(dateStr){ return attendance[dateStr] || {}; }
 function setAttForDate(dateStr, empId, status){
@@ -1423,6 +1123,7 @@ function markAtt(empId,status){
   save(); renderAttendance();
 }
 
+
 // ========== PAYROLL ==========
 function onPayrollMonthPicked(val){ currentPayrollMonth=val; renderPayroll(); }
 function renderPayroll(){
@@ -1499,7 +1200,7 @@ function showSlip(empId){
   const adv=loan?loan.emi:0;
   const net=gross-pf-esi-adv;
   document.getElementById('slipContent').innerHTML=`<div class="slip-preview">
-    <div class="slip-header"><div><div class="slip-company">Clear Ice Industries</div><div style="font-size:10px;color:var(--main-text-muted);margin-top:2px">GSTIN: 18AIOPG8152B2Z9 | 6003368214 / 7896455536</div><div style="font-size:10px;color:var(--main-text-muted);font-family:DM Mono;letter-spacing:0.5px;">GSTIN: 18AIOPG8152B2Z9 · 📞 6003368214 / 7896455536</div><div class="slip-period">Salary Slip · ${monthName} ${yr}</div></div></div>
+    <div class="slip-header"><div><div class="slip-company">CLEAR ICE INDUSTRIES</div><div style="font-family:DM Mono;font-size:10px;color:var(--main-text-muted);margin-top:2px">GSTIN: 18AIOPG8152B2Z9 | Ph: 6003368214 / 7896455536</div><div class="slip-period">Salary Slip · ${monthName} ${yr}</div></div></div>
     <div class="slip-row"><span style="color:var(--main-text-muted)">Employee</span><strong>${e.name}</strong></div>
     <div class="slip-row"><span style="color:var(--main-text-muted)">ID</span><span class="money-sm">${e.id}</span></div>
     <div class="slip-row"><span style="color:var(--main-text-muted)">Type</span>${e.type==='salary'?'Salaried':'Daily Wage'}</div>
@@ -1522,7 +1223,7 @@ function printSlip(){
 function exportPayrollCSV(){
   const [yr,mo]=currentPayrollMonth.split('-');
   const monthName=new Date(parseInt(yr),parseInt(mo)-1,1).toLocaleString('en-IN',{month:'long'});
-  let csv='Employee,DaysPresent,HalfDays,Gross,PF,ESI,LoanEMI,Net\n';
+  let csv='Employee,Site,DaysPresent,HalfDays,Gross,PF,ESI,LoanEMI,Net\n';
   employees.forEach(e=>{
     let p=0,h=0;
     Object.keys(attendance).forEach(dateStr=>{
@@ -1538,12 +1239,13 @@ function exportPayrollCSV(){
     const esi=e.esi?Math.round(gross*0.0075):0;
     const loan=loans.find(l=>l.empId===e.id&&l.status==='active');
     const emi=loan?loan.emi:0;
-    csv+=`${e.name},${p},${h},${gross},${pf},${esi},${emi},${gross-pf-esi-emi}\n`;
+    csv+=`${e.name},${siteLabel(e.site)},${p},${h},${gross},${pf},${esi},${emi},${gross-pf-esi-emi}\n`;
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`ClearIce_Payroll_${monthName}_${yr}.csv`; a.click();
 }
+
 
 // ========== LOANS ==========
 function renderLoans(){
@@ -1620,6 +1322,7 @@ function deleteLoan(i){
   if(!confirm(`Delete loan ${loans[i].id}?`)) return;
   loans.splice(i,1); save(); renderLoans(); renderDashboard();
 }
+
 
 // ========== STOCK ==========
 function renderStock(){
@@ -1703,7 +1406,6 @@ function saveQty(){
   save(); closeModal('qtyModal'); renderStock(); renderDashboard();
 }
 
-// ========== SITES ==========
 
 // ========== SALE VOUCHER ==========
 
@@ -1874,7 +1576,7 @@ function buildVoucherHTML(v){
   const gstRows=v.gstType==='gst'?`<div class="slip-row"><span>CGST (${v.gstRate/2}%)</span><span>${fmt(v.cgst)}</span></div><div class="slip-row"><span>SGST (${v.gstRate/2}%)</span><span>${fmt(v.sgst)}</span></div>`:v.gstType==='igst'?`<div class="slip-row"><span>IGST (${v.gstRate}%)</span><span>${fmt(v.igst)}</span></div>`:'';
   return `<div style="border:2px solid #111;border-radius:12px;padding:24px;background:white;color:#111;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #eee;padding-bottom:14px;margin-bottom:16px;">
-      <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px">Clear Ice Industries</div><div style="font-size:11px;color:#555;margin-top:2px">GSTIN: 18AIOPG8152B2Z9</div><div style="font-size:11px;color:#666">📞 6003368214 / 7896455536</div></div>
+      <div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px">CLEAR ICE INDUSTRIES</div><div style="font-size:11px;color:#444;font-weight:600;margin-top:2px">GSTIN: 18AIOPG8152B2Z9</div><div style="font-size:11px;color:#666">Ph: 6003368214 / 7896455536</div></div>
       <div style="text-align:right"><div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#666">Sale Voucher</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700">${v.no}</div>${v.poNumber?'<div style="font-size:11px;color:#888;font-family:DM Mono">PO: '+v.poNumber+'</div>':''}<div style="font-size:12px;color:#666">${v.date}</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
@@ -1891,7 +1593,7 @@ function buildVoucherHTML(v){
       <div style="display:flex;justify-content:space-between;font-weight:700;border-top:2px solid #111;padding-top:8px;margin-top:4px;font-size:15px;color:#111"><span>Grand Total</span><span style="font-family:'DM Mono',monospace">${fmt(v.grand)}</span></div>
     </div>
     ${v.notes?'<div style="margin-top:12px;font-size:12px;color:#666;border-top:1px solid #eee;padding-top:10px">Notes: '+v.notes+'</div>':''}
-    <div style="margin-top:16px;text-align:center;font-size:11px;color:#999">Thank you for your business! · Clear Ice Industries | GSTIN: 18AIOPG8152B2Z9</div>
+    <div style="margin-top:16px;text-align:center;font-size:11px;color:#999">Thank you for your business! · Clear Ice Industries</div>
   </div>`;
 }
 function printSaleVoucher(){
@@ -1952,7 +1654,8 @@ function renderSaleList(searchVal){
       <td style="font-family:'DM Mono';font-size:11px;color:var(--main-text-muted)">${v.poNumber||'—'}</td>
       <td style="font-family:'DM Mono';font-size:12px">${v.date}</td>
       <td><div class="emp-name">${v.customer}</div><div class="emp-id">${v.phone||''}${v.vendorId?' · <span style="color:#4ade80;font-size:10px">✓ Vendor</span>':''}</div></td>
-            <td style="font-family:'DM Mono';text-align:center">${v.items.length}</td>
+      <td style="font-size:12px;color:var(--main-text-muted)">${siteLabel(v.site)}</td>
+      <td style="font-family:'DM Mono';text-align:center">${v.items.length}</td>
       <td><span class="money-sm">${fmt(v.sub)}</span></td>
       <td><span class="money-sm">${fmt(v.cgst+v.sgst+v.igst)}</span></td>
       <td><span class="money-sm" style="font-weight:700">${fmt(v.grand)}</span></td>
@@ -1974,6 +1677,7 @@ function clearSaleDateFilter(){
 function filterSaleList(val){renderSaleList(val);}
 function viewVoucher(i){document.getElementById('salePrintContent').innerHTML=buildVoucherHTML(saleVouchers[i]);openModal('salePrintModal');}
 function deleteVoucher(i){if(!confirm('Delete voucher '+saleVouchers[i].no+'?')) return;saleVouchers.splice(i,1);save();renderSaleList();}
+
 
 // ========== TALLY ==========
 const SYNC_MSGS={
@@ -1997,6 +1701,7 @@ function doFullSync(){
   ['ledgers','payroll','stock','loans'].forEach((type,idx)=>setTimeout(()=>doSync(type),idx*2500));
   setTimeout(()=>{const t2=new Date().toTimeString().slice(0,8);log.innerHTML+=`<div class="sync-log-line ok">[${t2}] === ALL MODULES SYNCED ===</div>`;log.scrollTop=log.scrollHeight;},4*2500+1000);
 }
+
 
 
 // ========== VENDOR MASTER ==========
@@ -2078,90 +1783,27 @@ function renderVendors(searchVal) {
         // ── Body ──
         '<div class="vendor-card-body">' +
           (v.phone ? '<div class="vendor-detail"><span class="vendor-detail-icon">📞</span><span class="vendor-detail-val mono">'+v.phone+'</span></div>' : '') +
-function showAttTab(tab,btn){} // tabs removed - daily+calendar always shown together
+          (v.email ? '<div class="vendor-detail"><span class="vendor-detail-icon">✉</span><span class="vendor-detail-val">'+v.email+'</span></div>' : '') +
+          (v.address ? '<div class="vendor-detail"><span class="vendor-detail-icon">📍</span><span class="vendor-detail-val">'+v.address+(v.state?', '+v.state:'')+'</span></div>' :
+            (v.state ? '<div class="vendor-detail"><span class="vendor-detail-icon">📍</span><span class="vendor-detail-val">'+v.state+'</span></div>' : '')) +
+          (v.creditLimit>0 ? '<div class="vendor-detail"><span class="vendor-detail-icon">💳</span><span class="vendor-detail-val">Credit limit: '+fmt(v.creditLimit)+'</span></div>' : '') +
+          (v.notes ? '<div class="vendor-detail"><span class="vendor-detail-icon">📝</span><span class="vendor-detail-val" style="color:var(--main-text-muted);font-style:italic;">'+v.notes+'</span></div>' : '') +
+        '</div>' +
 
-// ========== MONTHLY CALENDAR ==========
-let currentCalMonth = (()=>{ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); })();
-// ========== ROLE PERMISSIONS EDITOR ==========
-const ALL_PAGES = [
-  {key:'dashboard',  label:'Dashboard'},
-  {key:'employees',  label:'Employees'},
-  {key:'attendance', label:'Attendance'},
-  {key:'payroll',    label:'Payroll'},
-  {key:'loans',      label:'Loans'},
-  {key:'stock',      label:'Stock Ledger'},
-  {key:'sales',      label:'Sale Voucher'},
-  {key:'vendors',    label:'Vendor Master'},
-  {key:'tally',      label:'Tally Sync'},
-  {key:'usermgmt',   label:'User Management'},
-];
+        // ── Footer ──
+        '<div class="vendor-card-footer">' +
+          '<span class="vendor-voucher-chip '+(vCount>0?'has-vouchers':'')+'">🧾 '+vCount+' voucher'+(vCount!==1?'s':'')+'</span>' +
+          '<div style="flex:1"></div>' +
+          '<button class="vc-btn vc-btn-use" onclick="useVendorInSale('+realIdx+')" title="Use in sale voucher">📄 Use</button>' +
+          '<button class="vc-btn vc-btn-edit" onclick="editVendor('+realIdx+')" title="Edit vendor" style="margin-left:6px;">✏ Edit</button>' +
+          '<button class="vc-btn vc-btn-del" onclick="deleteVendor('+realIdx+')" title="Delete vendor" style="margin-left:6px;">✕</button>' +
+        '</div>' +
 
-function renderRolePermissions() {
-  const tbody = document.getElementById('rolePermTable');
-  if (!tbody) return;
-  tbody.innerHTML = ALL_PAGES.map(p => {
-    const adminChecked  = ROLE_ACCESS.admin.includes(p.key);
-    const managerChecked = ROLE_ACCESS.manager.includes(p.key);
-    const staffChecked  = ROLE_ACCESS.staff.includes(p.key);
-    const salesChecked  = ROLE_ACCESS.sales.includes(p.key);
-    const isAdminOnly = p.key === 'usermgmt';
-    return '<tr style="border-bottom:1px solid var(--main-border-row);">' +
-      '<td style="padding:12px 16px;font-size:13px;font-weight:600;color:var(--main-text);">' + p.label + '</td>' +
-      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" ' + (adminChecked ? 'checked' : '') + ' disabled style="width:16px;height:16px;accent-color:#4ade80;" title="Admin always has full access"></td>' +
-      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" id="perm_manager_' + p.key + '" ' + (managerChecked ? 'checked' : '') + ' ' + (isAdminOnly ? 'disabled' : '') + ' style="width:16px;height:16px;accent-color:#60a5fa;"></td>' +
-      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" id="perm_staff_' + p.key + '" ' + (staffChecked ? 'checked' : '') + ' ' + (isAdminOnly ? 'disabled' : '') + ' style="width:16px;height:16px;accent-color:#facc15;"></td>' +
-      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" id="perm_sales_' + p.key + '" ' + (salesChecked ? 'checked' : '') + ' ' + (isAdminOnly ? 'disabled' : '') + ' style="width:16px;height:16px;accent-color:#fb923c;"></td>' +
-      '</tr>';
+      '</div>'
+    );
   }).join('');
 }
 
-async function saveRolePermissions() {
-  const pages = ALL_PAGES.map(p => p.key);
-  ROLE_ACCESS.manager = pages.filter(k => { const el = document.getElementById('perm_manager_' + k); return el && el.checked; });
-  ROLE_ACCESS.staff   = pages.filter(k => { const el = document.getElementById('perm_staff_'   + k); return el && el.checked; });
-  ROLE_ACCESS.sales   = pages.filter(k => { const el = document.getElementById('perm_sales_'   + k); return el && el.checked; });
-  // Always ensure admin has full access
-  ROLE_ACCESS.admin = pages;
-  // Save to Firebase
-  try {
-    await db.collection('otr_data').doc('role_permissions').set({
-      manager: ROLE_ACCESS.manager,
-      staff:   ROLE_ACCESS.staff,
-      sales:   ROLE_ACCESS.sales,
-    });
-    alert('Permissions saved! They will apply on next login.');
-  } catch(e) {
-    alert('Could not save permissions: ' + e.message);
-  }
-}
-
-async function loadRolePermissions() {
-  try {
-    const snap = await db.collection('otr_data').doc('role_permissions').get();
-    if (snap.exists) {
-      const d = snap.data();
-      if (d.manager) ROLE_ACCESS.manager = d.manager;
-      if (d.staff)   ROLE_ACCESS.staff   = d.staff;
-      if (d.sales)   ROLE_ACCESS.sales   = d.sales;
-    }
-  } catch(e) {
-    console.error('loadRolePermissions error', e);
-  }
-}
-
-
-// ========== RECOVERED MISSING FUNCTIONS ==========
-function toggleSidebar(){document.getElementById('mainSidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open');}
-function closeSidebar(){document.getElementById('mainSidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
-function onCalMonthPicked(val){ currentCalMonth=val; renderCalendar(); }
-function shiftCalMonth(delta){
-  const [y,m] = currentCalMonth.split('-').map(Number);
-  const d = new Date(y, m-1+delta, 1);
-  currentCalMonth = toLocalDateStr(d).slice(0,7);
-  const picker = document.getElementById('calMonthPicker');
-  if(picker) picker.value = currentCalMonth;
-  renderCalendar();
-}
 function filterVendors(val) { renderVendors(val !== undefined ? val : (document.getElementById('vendorSearch')||{value:''}).value); }
 
 function openVendorModal() {
@@ -2173,6 +1815,24 @@ function openVendorModal() {
   document.getElementById('vState').value = 'Assam';
   document.getElementById('vCreditLimit').value = '';
   document.getElementById('vPayMode').value = 'Cash';
+  openModal('vendorModal');
+}
+
+function editVendor(i) {
+  editVendorIdx = i;
+  const v = vendors[i];
+  document.getElementById('vendorModalTitle').textContent = 'EDIT VENDOR';
+  document.getElementById('vendorSaveBtn').textContent = 'Save Changes';
+  document.getElementById('vName').value = v.name;
+  document.getElementById('vPhone').value = v.phone || '';
+  document.getElementById('vEmail').value = v.email || '';
+  document.getElementById('vGstin').value = v.gstin || '';
+  document.getElementById('vAddress').value = v.address || '';
+  document.getElementById('vNotes').value = v.notes || '';
+  document.getElementById('vCategory').value = v.category || 'Retailer';
+  document.getElementById('vState').value = v.state || 'Assam';
+  document.getElementById('vCreditLimit').value = v.creditLimit || '';
+  document.getElementById('vPayMode').value = v.payMode || 'Cash';
   openModal('vendorModal');
 }
 
@@ -2202,6 +1862,454 @@ function saveVendor() {
   refreshStockDropdown();
 }
 
+function deleteVendor(i) {
+  const v = vendors[i];
+  const used = saleVouchers.filter(sv => sv.vendorId === v.id).length;
+  if (used > 0 && !confirm(`"${v.name}" has ${used} voucher(s). Delete anyway?`)) return;
+  if (used === 0 && !confirm(`Delete vendor "${v.name}"?`)) return;
+  vendors.splice(i, 1);
+  save();
+  renderVendors();
+  updateVendorBadge();
+  refreshVendorDropdown();
+  refreshStockDropdown();
+}
+
+function updateVendorBadge() {
+  const badge = document.getElementById('vendorBadge');
+  if (badge) badge.textContent = vendors.length;
+}
+
+// Auto-fill sale form from vendor
+function useVendorInSale(i) {
+  const v = vendors[i];
+  showPage('sales', document.querySelector('.nav-item[onclick*="sales"]'));
+  showSalesTab('create', document.querySelector('#page-sales .tab'));
+  // fill fields after a tick so the page renders
+  setTimeout(() => {
+    document.getElementById('saleCustomer').value = v.name;
+    document.getElementById('salePhone').value = v.phone || '';
+    // set pay mode if exists in dropdown
+    const pm = document.getElementById('salePayMode');
+    if ([...pm.options].some(o => o.value === v.payMode)) pm.value = v.payMode;
+    // set GST type hint based on state
+    const gstType = document.getElementById('saleGstType');
+    if (v.state && v.state !== 'Assam') gstType.value = 'igst'; else gstType.value = 'none';
+    updateGstLabel();
+    // store vendorId on a hidden input for voucher saving
+    let hid = document.getElementById('saleVendorId');
+    if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='saleVendorId'; document.getElementById('saleDate').parentElement.appendChild(hid); }
+    hid.value = v.id;
+    document.getElementById('saleCustomer').focus();
+  }, 50);
+}
+
+// Vendor dropdown / autocomplete in sale form
+function refreshVendorDropdown() {
+  const datalist = document.getElementById('vendorDatalist');
+  if (!datalist) return;
+  datalist.innerHTML = vendors.map(v => `<option value="${v.name}" data-id="${v.id}" data-phone="${v.phone||''}" data-pay="${v.payMode||'Cash'}" data-state="${v.state||'Assam'}">${v.name} — ${v.phone||''}</option>`).join('');
+}
+
+function onVendorNameInput(val) {
+  const match = vendors.find(v => v.name.toLowerCase() === val.toLowerCase());
+  if (match) {
+    document.getElementById('salePhone').value = match.phone || '';
+    const pm = document.getElementById('salePayMode');
+    if ([...pm.options].some(o => o.value === match.payMode)) pm.value = match.payMode;
+    const gstType = document.getElementById('saleGstType');
+    if (match.state && match.state !== 'Assam') gstType.value = 'igst'; else gstType.value = 'none';
+    updateGstLabel();
+    let hid = document.getElementById('saleVendorId');
+    if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='saleVendorId'; document.getElementById('saleDate').parentElement.appendChild(hid); }
+    hid.value = match.id;
+  }
+}
+
+
+
+// ========== ATTENDANCE TAB ==========
+function showAttTab(tab,btn){} // tabs removed - daily+calendar always shown together
+
+
+// ========== MONTHLY CALENDAR ==========
+let currentCalMonth = (()=>{ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); })();
+function shiftCalMonth(delta){
+  const [y,m] = currentCalMonth.split('-').map(Number);
+  const d = new Date(y, m-1+delta, 1);
+  currentCalMonth = toLocalDateStr(d).slice(0,7);
+  const picker = document.getElementById('calMonthPicker');
+  if(picker) picker.value = currentCalMonth;
+  renderCalendar();
+}
+function onCalMonthPicked(val){ currentCalMonth=val; renderCalendar(); }
+function getDaysInMonth(ym) {
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y,m,0).getDate();
+}
+function renderCalendar(){
+  const picker = document.getElementById('calMonthPicker');
+  if(picker && picker.value!==currentCalMonth) picker.value=currentCalMonth;
+  const filter = document.getElementById('calSiteFilter')?document.getElementById('calSiteFilter').value:'';
+  const emps = employees.filter(e=>!filter||e.site===filter);
+  const days = getDaysInMonth(currentCalMonth);
+  const container = document.getElementById('calendarContainer');
+  if(!container) return;
+  if(!emps.length){ container.innerHTML='<div style="padding:24px;text-align:center;color:var(--main-text-muted)">No employees found.</div>'; return; }
+
+  let html = '<table style="width:100%;border-collapse:collapse;min-width:900px;">';
+  // Header
+  html += '<thead><tr><th style="background:var(--main-thead);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--main-text-muted);position:sticky;left:0;z-index:5;min-width:150px;">Employee</th>';
+  for(let d=1;d<=days;d++){
+    const dow = new Date(currentCalMonth+'-'+String(d).padStart(2,'0')).getDay();
+    const isSun = dow===0;
+    html += `<th style="background:${isSun?'rgba(248,113,113,0.1)':'var(--main-thead)'};padding:6px 4px;text-align:center;font-size:10px;font-weight:700;color:${isSun?'#f87171':'white'};min-width:28px;border-left:1px solid var(--main-card-border)">${d}${isSun?'<br><span style=\'font-size:8px;font-weight:400\'>Sun</span>':''}</th>`;
+  }
+  html += '<th style="background:var(--main-thead);padding:6px 8px;text-align:center;font-size:10px;color:var(--main-text-muted);min-width:60px;">P/H/A</th></tr></thead><tbody>';
+
+  emps.forEach(e => {
+    html += `<tr>`;
+    html += `<td style="padding:8px 12px;border-bottom:1px solid var(--main-border-row);position:sticky;left:0;background:var(--main-card);z-index:3;white-space:nowrap;"><div class="emp-name" style="font-size:12px">${e.name}</div><div class="emp-id">${e.id}</div></td>`;
+    let P=0,H=0,A=0;
+    for(let d=1;d<=days;d++){
+      const dateStr = currentCalMonth+'-'+String(d).padStart(2,'0');
+      const s = attendance[dateStr]?.[e.id]||null;
+      if(s==='P') P++; else if(s==='H') H++; else if(s==='A') A++;
+      const dow = new Date(dateStr).getDay();
+      const isSun = dow===0;
+      let bg=isSun?'rgba(248,113,113,0.06)':'rgba(255,255,255,0.03)'; let color='var(--main-text-muted)'; let label='';
+      if(s==='P'){ bg='#1a6a1a'; color='white'; label='P'; }
+      else if(s==='A'){ bg='#8a2020'; color='white'; label='A'; }
+      else if(s==='H'){ bg='#7a5a00'; color='white'; label='H'; }
+      html += `<td style="padding:3px 2px;text-align:center;border-left:1px solid var(--main-card-border);border-bottom:1px solid var(--main-border-row);background:${isSun&&!s?'rgba(248,113,113,0.04)':'transparent'}"><div onclick="calToggleAtt('${e.id}',${d})" title="Click to cycle: P→H→A→clear" style="width:22px;height:22px;background:${bg};color:${color};border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:pointer;">${label||''}</div></td>`;
+    }
+    html += `<td style="padding:6px 8px;text-align:center;border-bottom:1px solid var(--main-border-row);border-left:1px solid var(--main-card-border);font-size:11px;font-family:'DM Mono';white-space:nowrap;"><span style="color:#4ade80">${P}P</span> <span style="color:#d4a017">${H}H</span> <span style="color:#f87171">${A}A</span></td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function calToggleAtt(empId, day){
+  const dateStr = currentCalMonth+'-'+String(day).padStart(2,'0');
+  const cur = (attendance[dateStr]||{})[empId]||null;
+  // Cycle: null → P → H → A → null (clear)
+  const next = cur===null?'P':cur==='P'?'H':cur==='H'?'A':null;
+  if(next!==null){
+    if(!attendance[dateStr]) attendance[dateStr]={};
+    attendance[dateStr][empId]=next;
+  } else {
+    if(attendance[dateStr]){ delete attendance[dateStr][empId]; if(!Object.keys(attendance[dateStr]).length) delete attendance[dateStr]; }
+  }
+  save(); renderCalendar(); renderDashboard();
+}
+
+
+// ========== SIDEBAR ==========
+function toggleSidebar(){document.getElementById('mainSidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('mainSidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
+
+
+// ========== MODAL CLOSE ON BACKDROP ==========
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
+
+
+// ========== FIREBASE SETUP ==========
+firebase.initializeApp({
+  apiKey: "AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw",
+  authDomain: "otr-app-01.firebaseapp.com",
+  projectId: "otr-app-01",
+  storageBucket: "otr-app-01.firebasestorage.app",
+  messagingSenderId: "157101499108",
+  appId: "1:157101499108:web:82ae28524520286fc542f1"
+});
+const db = firebase.firestore();
+
+function showLoadingOverlay(msg) {
+  let el = document.getElementById('fbLoadingOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'fbLoadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:DM Sans,sans-serif;color:white;gap:16px;';
+    el.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:2px;">CII</div><div id="fbLoadingMsg" style="font-size:13px;color:rgba(255,255,255,0.5)"></div><div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(el);
+  }
+  document.getElementById('fbLoadingMsg').textContent = msg || 'Loading...';
+}
+function hideLoadingOverlay() {
+  const el = document.getElementById('fbLoadingOverlay');
+  if (el) el.remove();
+}
+
+// ========== PERSISTENCE ==========
+async function save() {
+  try {
+    await db.collection('otr_data').doc('main').set({
+      employees, sites, loans, stockItems, attendance,
+      saleVouchers, saleCounter, vendors, updatedAt: Date.now()
+    });
+  } catch(e) {
+    console.error('Save error:', e);
+    alert('Save failed. Check your connection.');
+  }
+}
+
+async function load() {
+  showLoadingOverlay('Connecting to database...');
+  try {
+    const snap = await db.collection('otr_data').doc('main').get();
+    if (snap.exists) {
+      const d = snap.data();
+      employees    = d.employees    || DEFAULT_EMPLOYEES;
+      sites        = d.sites        || DEFAULT_SITES;
+      loans        = d.loans        || DEFAULT_LOANS;
+      stockItems   = d.stockItems   || DEFAULT_STOCK;
+      attendance   = d.attendance   || {};
+      saleVouchers = d.saleVouchers || [];
+      saleCounter  = d.saleCounter  || 1;
+      vendors      = d.vendors      || DEFAULT_VENDORS;
+    } else {
+      employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
+      stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
+      await save();
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+    alert('Could not connect to database. Check your internet connection.');
+    employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
+    stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
+  }
+  hideLoadingOverlay();
+}
+
+function resetAllData() {
+  if (!confirm('Reset ALL data to factory defaults? This cannot be undone.')) return;
+  employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
+  stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
+  save(); renderDashboard(); alert('Reset complete.');
+}
+
+function exportData() {
+  const d = {employees,sites,loans,stockItems,attendance,saleVouchers,saleCounter,vendors,ts:new Date().toISOString()};
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d,null,2));
+  a.download = 'ClearIce_Backup_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+}
+
+function importData() {
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange = e => {
+    const fr = new FileReader();
+    fr.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (!d.employees) throw new Error('Invalid file');
+        employees=d.employees||[]; sites=d.sites||[]; loans=d.loans||[];
+        stockItems=d.stockItems||[]; attendance=d.attendance||{};
+        saleVouchers=d.saleVouchers||[]; saleCounter=d.saleCounter||1; vendors=d.vendors||DEFAULT_VENDORS;
+        save(); renderDashboard(); alert('Imported successfully!');
+      } catch(err) { alert('Invalid backup file: ' + err.message); }
+    };
+    fr.readAsText(e.target.files[0]);
+  };
+  inp.click();
+}
+
+// ========== LOGIN / ROLE SYSTEM ==========
+const ROLE_ACCESS = {
+  admin:   ['dashboard','employees','attendance','payroll','loans','stock','sales','vendors','tally','usermgmt'],
+  manager: ['dashboard','employees','attendance','payroll','loans','stock','sales','vendors','tally'],
+  staff:   ['dashboard','attendance'],
+  sales:   ['dashboard','sales','vendors'],
+};
+const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
+
+async function loadUsers() {
+  try {
+    const snap = await db.collection('otr_data').doc('users').get();
+    if (snap.exists) { _cachedUsers = snap.data().list || []; return _cachedUsers; }
+  } catch(e) { console.error('loadUsers error', e); }
+  const defaults = [{ id:'u1', name:'Admin', username:'admin', password:'admin123', role:'admin' }];
+  await saveUsers(defaults);
+  return defaults;
+}
+async function saveUsers(users) {
+  _cachedUsers = users;
+  try { await db.collection('otr_data').doc('users').set({ list: users }); }
+  catch(e) { console.error('saveUsers error', e); alert('Could not save users.'); }
+}
+async function getUsers() {
+  if (_cachedUsers) return _cachedUsers;
+  return await loadUsers();
+}
+
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  try {
+    const users = await getUsers();
+    const match = users.find(x => x.username === u && x.password === p);
+    if (!match) { err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
+    err.style.display = 'none';
+    currentUser = match;
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('loginUserBadge').textContent = match.name + ' · ' + (ROLE_LABELS[match.role]||match.role);
+    applyRoleAccess(match.role);
+    const first = ROLE_ACCESS[match.role]?.[0] || 'dashboard';
+    const navBtn = document.querySelector(".nav-item[onclick*=\"showPage('" + first + "'\"]");
+    showPage(first, navBtn);
+  } catch(e) { console.error('Login error',e); alert('Login error. Check your connection.'); }
+  btn.textContent = 'Sign In →'; btn.disabled = false;
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+function applyRoleAccess(role) {
+  const allowed = ROLE_ACCESS[role] || [];
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    const m = (btn.getAttribute('onclick')||'').match(/showPage\('([^']+)'/);
+    if (m) btn.style.display = allowed.includes(m[1]) ? '' : 'none';
+  });
+  const adminSection = document.getElementById('navSectionAdmin');
+  if (adminSection) adminSection.style.display = (role==='admin') ? '' : 'none';
+  const addBtn = document.getElementById('topbarAddBtn');
+  if (addBtn) addBtn.style.display = (role==='admin'||role==='manager') ? '' : 'none';
+}
+
+function canAccess(page) {
+  if (!currentUser) return false;
+  return (ROLE_ACCESS[currentUser.role] || []).includes(page);
+}
+
+// ========== USER MANAGEMENT ==========
+let editingUserId = null;
+
+async function renderUsers() {
+  const users = await getUsers();
+  const tbody = document.getElementById('userTableBody');
+  if (!tbody) return;
+  const roleColors = {admin:'#4ade80',manager:'#60a5fa',staff:'#facc15',sales:'#fb923c'};
+  const roleBg = {admin:'rgba(74,222,128,0.12)',manager:'rgba(96,165,250,0.12)',staff:'rgba(250,204,21,0.12)',sales:'rgba(251,146,60,0.12)'};
+  tbody.innerHTML = users.map((u,i) => '<tr>' +
+    '<td style="color:var(--main-text-muted);font-family:DM Mono;font-size:11px">'+(i+1)+'</td>' +
+    '<td><div class="emp-name">'+u.name+'</div></td>' +
+    '<td><span style="font-family:DM Mono;font-size:12px">'+u.username+'</span></td>' +
+    '<td><span style="font-family:DM Mono;font-size:12px;color:var(--main-text-muted);letter-spacing:2px">••••••</span></td>' +
+    '<td><span class="badge-pill" style="background:'+roleBg[u.role]+';color:'+roleColors[u.role]+'">'+(ROLE_LABELS[u.role]||u.role)+'</span></td>' +
+    '<td class="actions-cell"><button class="btn btn-secondary btn-sm" onclick="editUser(\'' + u.id + '\')">Edit</button>' +
+    (u.id !== (currentUser&&currentUser.id) ? '<button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\')">Delete</button>' : '<span style="font-size:11px;color:var(--main-text-muted)">(you)</span>') +
+    '</td></tr>').join('');
+}
+
+async function openUserModal(id) {
+  editingUserId = id || null;
+  document.getElementById('userModalTitle').textContent = id ? 'EDIT USER' : 'ADD USER';
+  if (id) {
+    const u = (await getUsers()).find(x=>x.id===id);
+    if (!u) return;
+    document.getElementById('uName').value = u.name;
+    document.getElementById('uUsername').value = u.username;
+    document.getElementById('uPassword').value = u.password;
+    document.getElementById('uRole').value = u.role;
+  } else {
+    document.getElementById('uName').value = '';
+    document.getElementById('uUsername').value = '';
+    document.getElementById('uPassword').value = '';
+    document.getElementById('uRole').value = 'staff';
+  }
+  document.getElementById('userModal').classList.add('open');
+}
+function editUser(id) { openUserModal(id); }
+
+async function saveUser() {
+  const name = document.getElementById('uName').value.trim();
+  const username = document.getElementById('uUsername').value.trim();
+  const password = document.getElementById('uPassword').value.trim();
+  const role = document.getElementById('uRole').value;
+  if (!name||!username||!password) { alert('Fill in all fields.'); return; }
+  const users = await getUsers();
+  const dupe = users.find(x => x.username===username && x.id!==editingUserId);
+  if (dupe) { alert('Username already taken.'); return; }
+  if (editingUserId) {
+    const idx = users.findIndex(x=>x.id===editingUserId);
+    if (idx>-1) users[idx] = {...users[idx], name, username, password, role};
+  } else {
+    users.push({ id:'u'+Date.now(), name, username, password, role });
+  }
+  await saveUsers(users);
+  closeModal('userModal');
+  renderUsers();
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  const users = (await getUsers()).filter(x=>x.id!==id);
+  await saveUsers(users);
+  renderUsers();
+}
+
+// ========== ROLE PERMISSIONS ==========
+const ALL_PAGES = [
+  {key:'dashboard',label:'Dashboard'},{key:'employees',label:'Employees'},
+  {key:'attendance',label:'Attendance'},{key:'payroll',label:'Payroll'},
+  {key:'loans',label:'Loans'},{key:'stock',label:'Stock Ledger'},
+  {key:'sales',label:'Sale Voucher'},{key:'vendors',label:'Vendor Master'},
+  {key:'tally',label:'Tally Sync'},{key:'usermgmt',label:'User Management'},
+];
+
+function renderRolePermissions() {
+  const tbody = document.getElementById('rolePermTable');
+  if (!tbody) return;
+  tbody.innerHTML = ALL_PAGES.map(p => {
+    const isAdminOnly = p.key === 'usermgmt';
+    return '<tr style="border-bottom:1px solid var(--main-border-row);">' +
+      '<td style="padding:12px 16px;font-size:13px;font-weight:600;">'+p.label+'</td>' +
+      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" checked disabled style="width:16px;height:16px;accent-color:#4ade80;"></td>' +
+      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" id="perm_manager_'+p.key+'" '+(ROLE_ACCESS.manager.includes(p.key)?'checked':'')+' '+(isAdminOnly?'disabled':'')+' style="width:16px;height:16px;accent-color:#60a5fa;"></td>' +
+      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" id="perm_staff_'+p.key+'" '+(ROLE_ACCESS.staff.includes(p.key)?'checked':'')+' '+(isAdminOnly?'disabled':'')+' style="width:16px;height:16px;accent-color:#facc15;"></td>' +
+      '<td style="text-align:center;padding:12px 16px;"><input type="checkbox" id="perm_sales_'+p.key+'" '+(ROLE_ACCESS.sales.includes(p.key)?'checked':'')+' '+(isAdminOnly?'disabled':'')+' style="width:16px;height:16px;accent-color:#fb923c;"></td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function saveRolePermissions() {
+  const pages = ALL_PAGES.map(p=>p.key);
+  ROLE_ACCESS.manager = pages.filter(k=>{ const el=document.getElementById('perm_manager_'+k); return el&&el.checked; });
+  ROLE_ACCESS.staff   = pages.filter(k=>{ const el=document.getElementById('perm_staff_'+k);   return el&&el.checked; });
+  ROLE_ACCESS.sales   = pages.filter(k=>{ const el=document.getElementById('perm_sales_'+k);   return el&&el.checked; });
+  ROLE_ACCESS.admin   = pages;
+  try {
+    await db.collection('otr_data').doc('role_permissions').set({
+      manager:ROLE_ACCESS.manager, staff:ROLE_ACCESS.staff, sales:ROLE_ACCESS.sales
+    });
+    alert('Permissions saved! Applies on next login.');
+  } catch(e) { alert('Could not save: '+e.message); }
+}
+
+async function loadRolePermissions() {
+  try {
+    const snap = await db.collection('otr_data').doc('role_permissions').get();
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.manager) ROLE_ACCESS.manager = d.manager;
+      if (d.staff)   ROLE_ACCESS.staff   = d.staff;
+      if (d.sales)   ROLE_ACCESS.sales   = d.sales;
+    }
+  } catch(e) { console.error('loadRolePermissions error', e); }
+}
+
+// ========== MODAL CLOSE ON BACKDROP ==========
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
+
+// ========== INIT ==========
 window.addEventListener('load', async () => {
   await load();
   await loadRolePermissions();
@@ -2219,6 +2327,7 @@ window.addEventListener('load', async () => {
   refreshVendorDropdown();
   refreshStockDropdown();
 });
+
 </script>
 </body>
 </html>
