@@ -878,7 +878,7 @@
   </div>
 </div>
 
-<script>
+<script type="module">
 // ========== DEFAULT DATA ==========
 const DEFAULT_EMPLOYEES = [
   {id:'EMP001',name:'Ranjit Das',type:'daily',wage:520,site:'S1',pf:true,esi:true,phone:'9435012345',address:'Barpeta Town'},
@@ -921,61 +921,284 @@ let currentAttDate = (()=>{ const n=new Date(); return n.getFullYear()+'-'+Strin
 // Payroll month/year selector (YYYY-MM)
 let currentPayrollMonth = (()=>{ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); })();
 
-// ========== PERSISTENCE ==========
-function save(){
-  try{
-    localStorage.setItem('otr_emp',JSON.stringify(employees));
-    localStorage.setItem('otr_sites',JSON.stringify(sites));
-    localStorage.setItem('otr_loans',JSON.stringify(loans));
-    localStorage.setItem('otr_stock',JSON.stringify(stockItems));
-    localStorage.setItem('otr_att',JSON.stringify(attendance));
-    localStorage.setItem('otr_sales',JSON.stringify(saleVouchers));
-    localStorage.setItem('otr_salectr',String(saleCounter));
-    localStorage.setItem('otr_vendors',JSON.stringify(vendors));
-  }catch(e){}
+// ========== FIREBASE SETUP ==========
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw",
+  authDomain: "otr-app-01.firebaseapp.com",
+  projectId: "otr-app-01",
+  storageBucket: "otr-app-01.firebasestorage.app",
+  messagingSenderId: "157101499108",
+  appId: "1:157101499108:web:82ae28524520286fc542f1",
+  measurementId: "G-BLB5VXHW5R"
+};
+
+const _app = initializeApp(firebaseConfig);
+const db = getFirestore(_app);
+
+// Show a loading indicator while Firebase loads
+function showLoadingOverlay(msg) {
+  let el = document.getElementById('fbLoadingOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'fbLoadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:DM Sans,sans-serif;color:white;gap:16px;';
+    el.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:2px;">OTR</div><div id="fbLoadingMsg" style="font-size:13px;color:rgba(255,255,255,0.5)"></div><div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(el);
+  }
+  document.getElementById('fbLoadingMsg').textContent = msg || 'Loading...';
 }
-function load(){
-  try{
-    employees   = JSON.parse(localStorage.getItem('otr_emp'))   || DEFAULT_EMPLOYEES;
-    sites       = JSON.parse(localStorage.getItem('otr_sites')) || DEFAULT_SITES;
-    loans       = JSON.parse(localStorage.getItem('otr_loans')) || DEFAULT_LOANS;
-    stockItems  = JSON.parse(localStorage.getItem('otr_stock')) || DEFAULT_STOCK;
-    attendance  = JSON.parse(localStorage.getItem('otr_att'))   || {};
-    saleVouchers= JSON.parse(localStorage.getItem('otr_sales')) || [];
-    saleCounter = parseInt(localStorage.getItem('otr_salectr')) || 1;
-    vendors    = JSON.parse(localStorage.getItem('otr_vendors')) || DEFAULT_VENDORS;
-  }catch(e){
-    employees=DEFAULT_EMPLOYEES; sites=DEFAULT_SITES; loans=DEFAULT_LOANS;
-    stockItems=DEFAULT_STOCK; attendance={}; saleVouchers=[]; saleCounter=1; vendors=DEFAULT_VENDORS;
+function hideLoadingOverlay() {
+  const el = document.getElementById('fbLoadingOverlay');
+  if (el) el.remove();
+}
+
+// ========== PERSISTENCE (Firebase) ==========
+async function save() {
+  try {
+    await setDoc(doc(db, 'otr_data', 'main'), {
+      employees, sites, loans, stockItems, attendance,
+      saleVouchers, saleCounter, vendors,
+      updatedAt: Date.now()
+    });
+  } catch(e) {
+    console.error('Firebase save error:', e);
+    alert('⚠ Save failed. Check your internet connection.');
   }
 }
-function resetAllData(){
-  if(!confirm('Reset ALL data to factory defaults? This cannot be undone.')) return;
-  localStorage.clear(); load(); renderDashboard(); alert('Reset complete.');
+
+async function load() {
+  showLoadingOverlay('Connecting to database...');
+  try {
+    const snap = await getDoc(doc(db, 'otr_data', 'main'));
+    if (snap.exists()) {
+      const d = snap.data();
+      employees    = d.employees    || DEFAULT_EMPLOYEES;
+      sites        = d.sites        || DEFAULT_SITES;
+      loans        = d.loans        || DEFAULT_LOANS;
+      stockItems   = d.stockItems   || DEFAULT_STOCK;
+      attendance   = d.attendance   || {};
+      saleVouchers = d.saleVouchers || [];
+      saleCounter  = d.saleCounter  || 1;
+      vendors      = d.vendors      || DEFAULT_VENDORS;
+    } else {
+      // First time — seed with defaults and save
+      employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
+      stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
+      await save();
+    }
+  } catch(e) {
+    console.error('Firebase load error:', e);
+    alert('⚠ Could not connect to database. Check your internet connection and try again.');
+    employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
+    stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
+  }
+  hideLoadingOverlay();
 }
-function exportData(){
-  const d={employees,sites,loans,stockItems,attendance,saleVouchers,saleCounter,vendors,ts:new Date().toISOString()};
-  const a=document.createElement('a');
-  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(d,null,2));
-  a.download='OTR_Backup_'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+
+async function resetAllData() {
+  if (!confirm('Reset ALL data to factory defaults? This cannot be undone.')) return;
+  employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
+  stockItems = DEFAULT_STOCK; attendance = {}; saleVouchers = []; saleCounter = 1; vendors = DEFAULT_VENDORS;
+  await save();
+  renderDashboard();
+  alert('Reset complete.');
 }
-function importData(){
-  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
-  inp.onchange=e=>{
-    const fr=new FileReader();
-    fr.onload=ev=>{
-      try{
-        const d=JSON.parse(ev.target.result);
-        if(!d.employees) throw new Error('Invalid file');
+
+function exportData() {
+  const d = {employees,sites,loans,stockItems,attendance,saleVouchers,saleCounter,vendors,ts:new Date().toISOString()};
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d,null,2));
+  a.download = 'OTR_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importData() {
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange = e => {
+    const fr = new FileReader();
+    fr.onload = async ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (!d.employees) throw new Error('Invalid file');
         employees=d.employees||[]; sites=d.sites||[]; loans=d.loans||[];
         stockItems=d.stockItems||[]; attendance=d.attendance||{};
         saleVouchers=d.saleVouchers||[]; saleCounter=d.saleCounter||1; vendors=d.vendors||DEFAULT_VENDORS;
-        save(); renderDashboard(); alert('Backup imported successfully!');
-      }catch(err){alert('Invalid backup file: '+err.message);}
+        await save();
+        renderDashboard();
+        alert('Backup imported successfully!');
+      } catch(err) { alert('Invalid backup file: ' + err.message); }
     };
     fr.readAsText(e.target.files[0]);
   };
   inp.click();
+}
+
+// ========== LOGIN / ROLE SYSTEM ==========
+
+const ROLE_ACCESS = {
+  admin:   ['dashboard','employees','attendance','payroll','loans','stock','sites','sales','vendors','tally','usermgmt'],
+  manager: ['dashboard','employees','attendance','payroll','loans','stock','sites','sales','vendors','tally'],
+  staff:   ['dashboard','attendance'],
+  sales:   ['sales','vendors'],
+};
+
+const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
+
+let currentUser = null;
+let _cachedUsers = null;
+
+async function loadUsers() {
+  try {
+    const snap = await getDoc(doc(db, 'otr_data', 'users'));
+    if (snap.exists()) {
+      _cachedUsers = snap.data().list || [];
+      return _cachedUsers;
+    }
+  } catch(e) { console.error('loadUsers error', e); }
+  // Seed default admin
+  const defaults = [{ id:'u1', name:'Admin', username:'admin', password:'admin123', role:'admin' }];
+  await saveUsers(defaults);
+  return defaults;
+}
+
+async function saveUsers(users) {
+  _cachedUsers = users;
+  try {
+    await setDoc(doc(db, 'otr_data', 'users'), { list: users });
+  } catch(e) { console.error('saveUsers error', e); alert('⚠ Could not save users. Check connection.'); }
+}
+
+async function getUsers() {
+  if (_cachedUsers) return _cachedUsers;
+  return await loadUsers();
+}
+
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+  try {
+    const users = await getUsers();
+    const match = users.find(x => x.username === u && x.password === p);
+    if (!match) {
+      err.style.display = 'block';
+      btn.textContent = 'Sign In'; btn.disabled = false;
+      return;
+    }
+    err.style.display = 'none';
+    currentUser = match;
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('loginUserBadge').textContent = match.name + ' · ' + (ROLE_LABELS[match.role]||match.role);
+    applyRoleAccess(match.role);
+    const first = ROLE_ACCESS[match.role]?.[0] || 'dashboard';
+    const navBtn = document.querySelector(`.nav-item[onclick*="showPage('${first}'"]`);
+    showPage(first, navBtn);
+  } catch(e) {
+    alert('Login error. Check your internet connection.');
+  }
+  btn.textContent = 'Sign In'; btn.disabled = false;
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+function applyRoleAccess(role) {
+  const allowed = ROLE_ACCESS[role] || [];
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    const m = (btn.getAttribute('onclick')||'').match(/showPage\('([^']+)'/);
+    if (m) btn.style.display = allowed.includes(m[1]) ? '' : 'none';
+  });
+  const adminSection = document.getElementById('navSectionAdmin');
+  if (adminSection) adminSection.style.display = (role==='admin') ? '' : 'none';
+  const addBtn = document.getElementById('topbarAddBtn');
+  if (addBtn) addBtn.style.display = (role==='admin'||role==='manager') ? '' : 'none';
+}
+
+function canAccess(page) {
+  if (!currentUser) return false;
+  return (ROLE_ACCESS[currentUser.role] || []).includes(page);
+}
+
+// ========== USER MANAGEMENT ==========
+let editingUserId = null;
+
+async function renderUsers() {
+  const users = await getUsers();
+  const tbody = document.getElementById('userTableBody');
+  if (!tbody) return;
+  const roleColors = {admin:'#4ade80',manager:'#60a5fa',staff:'#facc15',sales:'#fb923c'};
+  const roleBg = {admin:'rgba(74,222,128,0.12)',manager:'rgba(96,165,250,0.12)',staff:'rgba(250,204,21,0.12)',sales:'rgba(251,146,60,0.12)'};
+  tbody.innerHTML = users.map((u,i) => `
+    <tr>
+      <td style="color:var(--main-text-muted);font-family:'DM Mono';font-size:11px">${i+1}</td>
+      <td><div class="emp-name">${u.name}</div></td>
+      <td><span style="font-family:'DM Mono';font-size:12px;color:var(--main-text)">${u.username}</span></td>
+      <td><span style="font-family:'DM Mono';font-size:12px;color:var(--main-text-muted);letter-spacing:2px">••••••</span></td>
+      <td><span class="badge-pill" style="background:${roleBg[u.role]};color:${roleColors[u.role]}">${ROLE_LABELS[u.role]||u.role}</span></td>
+      <td class="actions-cell">
+        <button class="btn btn-secondary btn-sm" onclick="editUser('${u.id}')">Edit</button>
+        ${u.id !== currentUser?.id ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>` : '<span style="font-size:11px;color:var(--main-text-muted)">(you)</span>'}
+      </td>
+    </tr>`).join('');
+}
+
+async function openUserModal(id) {
+  editingUserId = id || null;
+  const modal = document.getElementById('userModal');
+  document.getElementById('userModalTitle').textContent = id ? 'EDIT USER' : 'ADD USER';
+  if (id) {
+    const u = (await getUsers()).find(x=>x.id===id);
+    if (!u) return;
+    document.getElementById('uName').value = u.name;
+    document.getElementById('uUsername').value = u.username;
+    document.getElementById('uPassword').value = u.password;
+    document.getElementById('uRole').value = u.role;
+  } else {
+    document.getElementById('uName').value = '';
+    document.getElementById('uUsername').value = '';
+    document.getElementById('uPassword').value = '';
+    document.getElementById('uRole').value = 'staff';
+  }
+  modal.classList.add('open');
+}
+
+function editUser(id) { openUserModal(id); }
+
+async function saveUser() {
+  const name = document.getElementById('uName').value.trim();
+  const username = document.getElementById('uUsername').value.trim();
+  const password = document.getElementById('uPassword').value.trim();
+  const role = document.getElementById('uRole').value;
+  if (!name||!username||!password) { alert('Please fill in all fields.'); return; }
+  const users = await getUsers();
+  const dupe = users.find(x => x.username===username && x.id!==editingUserId);
+  if (dupe) { alert('Username "'+username+'" is already taken. Choose another.'); return; }
+  if (editingUserId) {
+    const idx = users.findIndex(x=>x.id===editingUserId);
+    if (idx>-1) users[idx] = {...users[idx], name, username, password, role};
+  } else {
+    users.push({ id:'u'+Date.now(), name, username, password, role });
+  }
+  await saveUsers(users);
+  closeModal('userModal');
+  renderUsers();
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user? They will no longer be able to log in.')) return;
+  const users = (await getUsers()).filter(x=>x.id!==id);
+  await saveUsers(users);
+  renderUsers();
 }
 
 // ========== HELPERS ==========
@@ -2180,162 +2403,16 @@ function calToggleAtt(empId, day){
 function toggleSidebar(){document.getElementById('mainSidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open');}
 function closeSidebar(){document.getElementById('mainSidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
 
-// ========== LOGIN / ROLE SYSTEM ==========
-
-// PAGE ACCESS PER ROLE
-const ROLE_ACCESS = {
-  admin:   ['dashboard','employees','attendance','payroll','loans','stock','sites','sales','vendors','tally','usermgmt'],
-  manager: ['dashboard','employees','attendance','payroll','loans','stock','sites','sales','vendors','tally'],
-  staff:   ['dashboard','attendance'],
-  sales:   ['sales','vendors'],
-};
-
-const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
-
-let currentUser = null;
-
-// Load users from localStorage, seed defaults if none exist
-function loadUsers() {
-  const raw = localStorage.getItem('otr_users');
-  if (raw) return JSON.parse(raw);
-  const defaults = [
-    { id:'u1', name:'Admin',   username:'admin',   password:'admin123', role:'admin' },
-  ];
-  saveUsers(defaults);
-  return defaults;
-}
-function saveUsers(users) {
-  localStorage.setItem('otr_users', JSON.stringify(users));
-}
-function getUsers() { return loadUsers(); }
-
-function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const users = getUsers();
-  const match = users.find(x => x.username === u && x.password === p);
-  const err = document.getElementById('loginError');
-  if (!match) { err.style.display='block'; return; }
-  err.style.display='none';
-  currentUser = match;
-  document.getElementById('loginOverlay').classList.add('hidden');
-  document.getElementById('loginUserBadge').textContent = match.name + ' · ' + (ROLE_LABELS[match.role]||match.role);
-  applyRoleAccess(match.role);
-  const first = ROLE_ACCESS[match.role]?.[0] || 'dashboard';
-  const btn = document.querySelector(`.nav-item[onclick*="showPage('${first}'"]`);
-  showPage(first, btn);
-}
-
-function doLogout() {
-  currentUser = null;
-  document.getElementById('loginUser').value = '';
-  document.getElementById('loginPass').value = '';
-  document.getElementById('loginOverlay').classList.remove('hidden');
-}
-
-function applyRoleAccess(role) {
-  const allowed = ROLE_ACCESS[role] || [];
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    const m = (btn.getAttribute('onclick')||'').match(/showPage\('([^']+)'/);
-    if (m) btn.style.display = allowed.includes(m[1]) ? '' : 'none';
-  });
-  // Hide entire admin nav section for non-admins
-  const adminSection = document.getElementById('navSectionAdmin');
-  if (adminSection) adminSection.style.display = (role==='admin') ? '' : 'none';
-  // Topbar add button
-  const addBtn = document.getElementById('topbarAddBtn');
-  if (addBtn) addBtn.style.display = (role==='admin'||role==='manager') ? '' : 'none';
-}
-
-function canAccess(page) {
-  if (!currentUser) return false;
-  return (ROLE_ACCESS[currentUser.role] || []).includes(page);
-}
-
-// ========== USER MANAGEMENT ==========
-let editingUserId = null;
-
-function renderUsers() {
-  const users = getUsers();
-  const tbody = document.getElementById('userTableBody');
-  if (!tbody) return;
-  const roleColors = {admin:'#4ade80',manager:'#60a5fa',staff:'#facc15',sales:'#fb923c'};
-  const roleBg = {admin:'rgba(74,222,128,0.12)',manager:'rgba(96,165,250,0.12)',staff:'rgba(250,204,21,0.12)',sales:'rgba(251,146,60,0.12)'};
-  tbody.innerHTML = users.map((u,i) => `
-    <tr>
-      <td style="color:var(--main-text-muted);font-family:'DM Mono';font-size:11px">${i+1}</td>
-      <td><div class="emp-name">${u.name}</div></td>
-      <td><span style="font-family:'DM Mono';font-size:12px;color:var(--main-text)">${u.username}</span></td>
-      <td><span style="font-family:'DM Mono';font-size:12px;color:var(--main-text-muted);letter-spacing:2px">••••••</span></td>
-      <td><span class="badge-pill" style="background:${roleBg[u.role]};color:${roleColors[u.role]}">${ROLE_LABELS[u.role]||u.role}</span></td>
-      <td class="actions-cell">
-        <button class="btn btn-secondary btn-sm" onclick="editUser('${u.id}')">Edit</button>
-        ${u.id !== currentUser?.id ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>` : '<span style="font-size:11px;color:var(--main-text-muted)">(you)</span>'}
-      </td>
-    </tr>`).join('');
-}
-
-function openUserModal(id) {
-  editingUserId = id || null;
-  const modal = document.getElementById('userModal');
-  document.getElementById('userModalTitle').textContent = id ? 'EDIT USER' : 'ADD USER';
-  if (id) {
-    const u = getUsers().find(x=>x.id===id);
-    if (!u) return;
-    document.getElementById('uName').value = u.name;
-    document.getElementById('uUsername').value = u.username;
-    document.getElementById('uPassword').value = u.password;
-    document.getElementById('uRole').value = u.role;
-  } else {
-    document.getElementById('uName').value = '';
-    document.getElementById('uUsername').value = '';
-    document.getElementById('uPassword').value = '';
-    document.getElementById('uRole').value = 'staff';
-  }
-  modal.classList.add('open');
-}
-
-function editUser(id) { openUserModal(id); }
-
-function saveUser() {
-  const name = document.getElementById('uName').value.trim();
-  const username = document.getElementById('uUsername').value.trim();
-  const password = document.getElementById('uPassword').value.trim();
-  const role = document.getElementById('uRole').value;
-  if (!name||!username||!password) { alert('Please fill in all fields.'); return; }
-  const users = getUsers();
-  // Check duplicate username
-  const dupe = users.find(x => x.username===username && x.id!==editingUserId);
-  if (dupe) { alert('Username "'+username+'" is already taken. Choose another.'); return; }
-  if (editingUserId) {
-    const idx = users.findIndex(x=>x.id===editingUserId);
-    if (idx>-1) users[idx] = {...users[idx], name, username, password, role};
-  } else {
-    users.push({ id:'u'+Date.now(), name, username, password, role });
-  }
-  saveUsers(users);
-  closeModal('userModal');
-  renderUsers();
-}
-
-function deleteUser(id) {
-  if (!confirm('Delete this user? They will no longer be able to log in.')) return;
-  const users = getUsers().filter(x=>x.id!==id);
-  saveUsers(users);
-  renderUsers();
-}
-
 // ========== MODAL CLOSE ON BACKDROP ==========
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
 
 // ========== INIT ==========
-window.addEventListener('load',()=>{
-  load();
+window.addEventListener('load', async () => {
+  await load();
   document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   populateSiteSelects();
   renderDashboard();
   initSaleForm();
-  // Init date pickers
   const attPicker=document.getElementById('attDatePicker');
   if(attPicker) attPicker.value=currentAttDate;
   const payPicker=document.getElementById('payrollMonthPicker');
@@ -2345,6 +2422,46 @@ window.addEventListener('load',()=>{
   updateVendorBadge();
   refreshVendorDropdown();
   refreshStockDropdown();
+});
+
+// ========== EXPOSE FUNCTIONS TO WINDOW (required for type="module") ==========
+Object.assign(window, {
+  // Navigation
+  showPage, topbarAdd, toggleSidebar, closeSidebar,
+  // Login
+  doLogin, doLogout,
+  // Employees
+  openEmpModal, editEmployee, saveEmployee, deleteEmployee, onEmpTypeChange,
+  // Attendance
+  markAtt, shiftAttDate, onAttDatePicked, goAttToday, renderAttendance,
+  shiftCalMonth, onCalMonthPicked, renderCalendar, calToggleAtt, showAttTab,
+  // Payroll
+  onPayrollMonthPicked, showSlip, printSlip, exportPayrollCSV,
+  // Loans
+  openLoanModal, editLoan, saveLoan, deleteLoan, recoverLoan,
+  // Stock
+  openStockModal, editStock, saveStockItem, deleteStock,
+  openQtyModal, saveQty, onStockItemPicked, refreshStockDropdown,
+  // Sites
+  openSiteModal, editSite, saveSite, deleteSite,
+  // Sales
+  initSaleForm, addSaleItem, removeSaleItem, recalcSale, updateGstLabel,
+  saveSaleVoucher, clearSaleForm, printSaleVoucher, doPrintSale,
+  showSalesTab, renderSaleList, filterSaleList, clearSaleDateFilter,
+  viewVoucher, deleteVoucher, onVendorNameInput,
+  // Vendors
+  openVendorModal, editVendor, saveVendor, deleteVendor,
+  filterVendors, useVendorInSale, refreshVendorDropdown,
+  // Users
+  openUserModal, editUser, saveUser, deleteUser, renderUsers,
+  // Tally
+  doSync, doFullSync,
+  // Data
+  exportData, importData, resetAllData,
+  // Modals
+  openModal, closeModal,
+  // Sales list
+  calcItemTotal,
 });
 </script>
 </body>
