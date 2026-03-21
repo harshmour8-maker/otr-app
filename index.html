@@ -2166,15 +2166,23 @@ const ROLE_ACCESS = {
 const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
 
 async function loadUsers() {
-  // Try Firestore first
+  // Always try Firestore first — this is the source of truth for all devices
   const d = await fbRestGet('users');
-  if (d && d.list) { _cachedUsers = d.list; localStorage.setItem('otr_local_users', JSON.stringify(d.list)); return _cachedUsers; }
-  // Fall back to localStorage
+  if (d && d.list && d.list.length > 0) {
+    _cachedUsers = d.list;
+    // Update this device's localStorage with the latest from Firestore
+    try { localStorage.setItem('otr_local_users', JSON.stringify(d.list)); } catch(e) {}
+    return _cachedUsers;
+  }
+  // Firestore unavailable — fall back to localStorage
   try {
     const local = localStorage.getItem('otr_local_users');
-    if (local) { _cachedUsers = JSON.parse(local); return _cachedUsers; }
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (parsed && parsed.length > 0) { _cachedUsers = parsed; return _cachedUsers; }
+    }
   } catch(e) {}
-  // Default admin
+  // No data anywhere — seed default admin
   const defaults = [{ id:'u1', name:'Admin', username:'admin', password:'admin123', role:'admin' }];
   await saveUsers(defaults);
   return defaults;
@@ -2182,7 +2190,8 @@ async function loadUsers() {
 async function saveUsers(users) {
   _cachedUsers = users;
   try { localStorage.setItem('otr_local_users', JSON.stringify(users)); } catch(e) {}
-  fbRestSet('users', { list: users });
+  // Await Firestore write so new users are available cross-device immediately
+  await fbRestSet('users', { list: users });
 }
 async function getUsers() {
   if (_cachedUsers) return _cachedUsers;
@@ -2196,7 +2205,9 @@ async function doLogin() {
   const btn = document.querySelector('.login-btn');
   btn.textContent = 'Signing in...'; btn.disabled = true;
   try {
-    const users = await getUsers();
+    // Always fetch fresh from Firestore on login (never use cache)
+    _cachedUsers = null;
+    const users = await loadUsers();
     const match = users.find(x => x.username === u && x.password === p);
     if (!match) { err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
     err.style.display = 'none';
