@@ -816,8 +816,6 @@
 </div>
 
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ========== DEFAULT DATA ==========
 const DEFAULT_EMPLOYEES = [
@@ -2014,16 +2012,69 @@ function closeSidebar(){document.getElementById('mainSidebar').classList.remove(
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
 
 
-// ========== FIREBASE SETUP ==========
-firebase.initializeApp({
-  apiKey: "AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw",
-  authDomain: "otr-app-01.firebaseapp.com",
-  projectId: "otr-app-01",
-  storageBucket: "otr-app-01.firebasestorage.app",
-  messagingSenderId: "157101499108",
-  appId: "1:157101499108:web:82ae28524520286fc542f1"
-});
-const db = firebase.firestore();
+// ========== FIRESTORE REST API SETUP ==========
+const FB_PROJECT = 'otr-app-01';
+const FB_API_KEY = 'AIzaSyB6PEN4OThxcHo30G-J0-DCavtv_VAfXZw';
+const FB_BASE = 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT + '/databases/(default)/documents';
+
+async function fbGet(docPath) {
+  const url = FB_BASE + '/' + docPath + '?key=' + FB_API_KEY;
+  const r = await fetch(url);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('fbGet failed: ' + r.status);
+  const data = await r.json();
+  return firestoreToJS(data.fields || {});
+}
+
+async function fbSet(docPath, obj) {
+  const url = FB_BASE + '/' + docPath + '?key=' + FB_API_KEY;
+  // Use PATCH to create or overwrite
+  const fields = jsToFirestore(obj);
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({fields})
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error('fbSet failed: ' + r.status + ' ' + t); }
+  return true;
+}
+
+function firestoreToJS(fields) {
+  const out = {};
+  for (const [k, v] of Object.entries(fields)) {
+    out[k] = decodeFirestoreValue(v);
+  }
+  return out;
+}
+
+function decodeFirestoreValue(v) {
+  if (v.stringValue !== undefined) return v.stringValue;
+  if (v.integerValue !== undefined) return parseInt(v.integerValue);
+  if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
+  if (v.booleanValue !== undefined) return v.booleanValue;
+  if (v.nullValue !== undefined) return null;
+  if (v.arrayValue !== undefined) return (v.arrayValue.values || []).map(decodeFirestoreValue);
+  if (v.mapValue !== undefined) return firestoreToJS(v.mapValue.fields || {});
+  return null;
+}
+
+function jsToFirestore(obj) {
+  const fields = {};
+  for (const [k, v] of Object.entries(obj)) {
+    fields[k] = encodeFirestoreValue(v);
+  }
+  return fields;
+}
+
+function encodeFirestoreValue(v) {
+  if (v === null || v === undefined) return {nullValue: null};
+  if (typeof v === 'boolean') return {booleanValue: v};
+  if (typeof v === 'number') return Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v};
+  if (typeof v === 'string') return {stringValue: v};
+  if (Array.isArray(v)) return {arrayValue: {values: v.map(encodeFirestoreValue)}};
+  if (typeof v === 'object') return {mapValue: {fields: jsToFirestore(v)}};
+  return {stringValue: String(v)};
+}
 
 function showLoadingOverlay(msg) {
   let el = document.getElementById('fbLoadingOverlay');
@@ -2044,7 +2095,7 @@ function hideLoadingOverlay() {
 // ========== PERSISTENCE ==========
 async function save() {
   try {
-    await db.collection('otr_data').doc('main').set({
+    await fbSet('otr_data/main', {
       employees, sites, loans, stockItems, attendance,
       saleVouchers, saleCounter, vendors, updatedAt: Date.now()
     });
@@ -2057,9 +2108,8 @@ async function save() {
 async function load() {
   showLoadingOverlay('Connecting to database...');
   try {
-    const snap = await db.collection('otr_data').doc('main').get();
-    if (snap.exists) {
-      const d = snap.data();
+    const d = await fbGet('otr_data/main');
+    if (d) {
       employees    = d.employees    || DEFAULT_EMPLOYEES;
       sites        = d.sites        || DEFAULT_SITES;
       loans        = d.loans        || DEFAULT_LOANS;
@@ -2126,8 +2176,8 @@ const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'
 
 async function loadUsers() {
   try {
-    const snap = await db.collection('otr_data').doc('users').get();
-    if (snap.exists) { _cachedUsers = snap.data().list || []; return _cachedUsers; }
+    const d = await fbGet('otr_data/users');
+    if (d && d.list) { _cachedUsers = d.list; return _cachedUsers; }
   } catch(e) { console.error('loadUsers error', e); }
   const defaults = [{ id:'u1', name:'Admin', username:'admin', password:'admin123', role:'admin' }];
   await saveUsers(defaults);
@@ -2135,7 +2185,7 @@ async function loadUsers() {
 }
 async function saveUsers(users) {
   _cachedUsers = users;
-  try { await db.collection('otr_data').doc('users').set({ list: users }); }
+  try { await fbSet('otr_data/users', { list: users }); }
   catch(e) { console.error('saveUsers error', e); alert('Could not save users.'); }
 }
 async function getUsers() {
@@ -2287,7 +2337,7 @@ async function saveRolePermissions() {
   ROLE_ACCESS.sales   = pages.filter(k=>{ const el=document.getElementById('perm_sales_'+k);   return el&&el.checked; });
   ROLE_ACCESS.admin   = pages;
   try {
-    await db.collection('otr_data').doc('role_permissions').set({
+    await fbSet('otr_data/role_permissions', {
       manager:ROLE_ACCESS.manager, staff:ROLE_ACCESS.staff, sales:ROLE_ACCESS.sales
     });
     alert('Permissions saved! Applies on next login.');
@@ -2296,9 +2346,8 @@ async function saveRolePermissions() {
 
 async function loadRolePermissions() {
   try {
-    const snap = await db.collection('otr_data').doc('role_permissions').get();
-    if (snap.exists) {
-      const d = snap.data();
+    const d = await fbGet('otr_data/role_permissions');
+    if (d) {
       if (d.manager) ROLE_ACCESS.manager = d.manager;
       if (d.staff)   ROLE_ACCESS.staff   = d.staff;
       if (d.sales)   ROLE_ACCESS.sales   = d.sales;
