@@ -283,6 +283,10 @@
       <label class="login-label">Password</label>
       <input class="login-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;margin-top:-4px;">
+      <input type="checkbox" id="rememberMe" style="width:15px;height:15px;accent-color:white;cursor:pointer;"/>
+      <label for="rememberMe" style="font-size:12px;color:rgba(255,255,255,0.4);cursor:pointer;user-select:none;">Remember me for 30 days</label>
+    </div>
     <button class="login-btn" onclick="doLogin()">Sign In →</button>
   </div>
 </div>
@@ -1058,9 +1062,9 @@ function deleteEmployee(i){
   const e=employees[i];
   if(!confirm(`Delete ${e.name} (${e.id})? This will also affect attendance and payroll records.`)) return;
   employees.splice(i,1);
-  // Remove all attendance records for this employee across all dates
+  // Remove employee attendance records across all dates
   Object.keys(attendance).forEach(dateStr=>{
-    if(attendance[dateStr]) {
+    if(attendance[dateStr]){
       delete attendance[dateStr][e.id];
       if(!Object.keys(attendance[dateStr]).length) delete attendance[dateStr];
     }
@@ -2030,7 +2034,7 @@ function calToggleAtt(empId, day){
     if(attendance[dateStr]){ delete attendance[dateStr][empId]; if(!Object.keys(attendance[dateStr]).length) delete attendance[dateStr]; }
   }
   save(); renderCalendar(); renderDashboard();
-  // Also refresh the daily register if it's visible, so both views stay in sync
+  // Sync daily attendance register if visible
   if(document.getElementById('attTableBody')) renderAttendance();
 }
 
@@ -2246,34 +2250,58 @@ async function getUsers() {
   return await loadUsers();
 }
 
+function _saveSessionCookie(user) {
+  const val = encodeURIComponent(JSON.stringify({id:user.id, username:user.username, name:user.name, role:user.role}));
+  document.cookie = 'cii_session=' + val + '; max-age=' + (30*24*60*60) + '; path=/; SameSite=Lax';
+}
+function _clearSessionCookie() {
+  document.cookie = 'cii_session=; max-age=0; path=/; SameSite=Lax';
+}
+function _getSessionCookie() {
+  try {
+    const raw = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('cii_session='));
+    if (!raw) return null;
+    return JSON.parse(decodeURIComponent(raw.slice(12)));
+  } catch(e) { return null; }
+}
+
 async function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
+  const remember = document.getElementById('rememberMe').checked;
   const err = document.getElementById('loginError');
   const btn = document.querySelector('.login-btn');
   btn.textContent = 'Signing in...'; btn.disabled = true;
   try {
-    // Always fetch fresh from Firestore on login (never use cache)
     _cachedUsers = null;
     const users = await loadUsers();
     const match = users.find(x => x.username === u && x.password === p);
     if (!match) { err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
     err.style.display = 'none';
     currentUser = match;
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.getElementById('loginUserBadge').textContent = match.name + ' · ' + (ROLE_LABELS[match.role]||match.role);
-    applyRoleAccess(match.role);
-    const first = ROLE_ACCESS[match.role]?.[0] || 'dashboard';
-    const navBtn = document.querySelector(".nav-item[onclick*=\"showPage('" + first + "'\"]");
-    showPage(first, navBtn);
+    if (remember) _saveSessionCookie(match);
+    _completeLogin(match);
   } catch(e) { console.error('Login error',e); alert('Login error. Check your connection.'); }
   btn.textContent = 'Sign In →'; btn.disabled = false;
 }
 
+function _completeLogin(match) {
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('loginUserBadge').textContent = match.name + ' · ' + (ROLE_LABELS[match.role]||match.role);
+  applyRoleAccess(match.role);
+  const first = ROLE_ACCESS[match.role]?.[0] || 'dashboard';
+  const navBtn = document.querySelector(".nav-item[onclick*=\"showPage('" + first + "'\"]");
+  showPage(first, navBtn);
+}
+
 function doLogout() {
   currentUser = null;
+  _clearSessionCookie();
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
+  // Uncheck "Remember me" so next login doesn't silently re-save session
+  const rm = document.getElementById('rememberMe');
+  if(rm) rm.checked = false;
   document.getElementById('loginOverlay').classList.remove('hidden');
 }
 
@@ -2417,6 +2445,21 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 window.addEventListener('load', async () => {
   await load();
   await loadRolePermissions();
+  // Auto-login if remember me cookie exists
+  const session = _getSessionCookie();
+  if (session) {
+    try {
+      // Verify user still exists in Firebase before auto-logging in
+      const users = await loadUsers();
+      const match = users.find(x => x.id === session.id && x.username === session.username);
+      if (match) {
+        currentUser = match;
+        _completeLogin(match);
+      } else {
+        _clearSessionCookie(); // User deleted/changed — clear stale cookie
+      }
+    } catch(e) { _clearSessionCookie(); }
+  }
   // Populate Firebase config inputs if saved
   try {
     const raw = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('fb_cfg='));
