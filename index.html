@@ -580,7 +580,7 @@
       </div>
       <input class="form-input" style="width:200px" placeholder="🔍 Search customer..." oninput="renderSaleList(this.value)" id="saleSearchInput"/>
     </div>
-    <div id="saleDateSummary" style="display:none;background:rgba(255,255,255,0.05);border:1px solid var(--main-card-border);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:var(--main-text-muted);display:flex;gap:24px;flex-wrap:wrap;"></div>
+    <div id="saleDateSummary" style="display:none;background:rgba(255,255,255,0.05);border:1px solid var(--main-card-border);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:var(--main-text-muted);gap:24px;flex-wrap:wrap;"></div>
     <div class="table-card table-wrap"><table><thead><tr><th>Voucher No.</th><th>PO No.</th><th>Date</th><th>Customer</th><th>Site</th><th>Items</th><th>Sub Total</th><th>GST</th><th>Grand Total</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="saleListBody"></tbody></table></div>
   </div>
 </div>
@@ -634,15 +634,19 @@
     <div class="spacer"></div>
     <button class="btn btn-primary" onclick="openUserModal()">+ Add User</button>
   </div>
-  <!-- Sync URL Setup -->
+  <!-- Firebase Config Setup -->
   <div style="background:var(--main-card);border:1px solid var(--main-card-border);border-radius:12px;padding:20px;margin-bottom:24px;">
-    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--main-text-muted);margin-bottom:8px;">Cross-Device Sync URL</div>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <input class="form-input" id="gasUrlInput" placeholder="Paste your Apps Script Web App URL here" style="flex:1;" value=""/>
-      <button class="btn btn-primary" onclick="saveGasUrl()">Save URL</button>
-      <button class="btn btn-secondary" onclick="testGasUrl()">Test</button>
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--main-text-muted);margin-bottom:4px;">Firebase Configuration</div>
+    <div style="font-size:11px;color:var(--main-text-muted);margin-bottom:14px;">Enter your Firebase project details. Find these in Firebase Console → Project Settings → Your Apps.</div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Project ID *</div><input class="form-input" id="fbProjectId" placeholder="my-project-12345"/></div>
+      <div class="form-group"><div class="form-label">API Key *</div><input class="form-input" id="fbApiKey" placeholder="AIzaSy..."/></div>
     </div>
-    <div style="font-size:11px;color:var(--main-text-muted);margin-top:8px;" id="gasUrlStatus"></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
+      <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 Save Config</button>
+      <button class="btn btn-secondary" onclick="testFirebaseConfig()">🔗 Test Connection</button>
+      <div style="font-size:11px;color:var(--main-text-muted);" id="gasUrlStatus"></div>
+    </div>
   </div>
   <div class="table-card table-wrap" style="margin-bottom:32px;">
     <table><thead><tr><th>#</th><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr></thead>
@@ -881,19 +885,24 @@ function stockStatus(qty,min){const r=qty/Math.max(min,1); return r>=1?'ok':r>=0
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 function openModal(id){document.getElementById(id).classList.add('open')}
 function populateSiteSelects(){
+  const opts = sites.length
+    ? sites.map(s=>`<option value="${s.code}">${s.name}</option>`).join('')
+    : '<option value="S1">Main Site</option>';
   ['empSite','siSite','saleSite'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
-    el.innerHTML='<option value="S1">Main Site</option>';
+    const prev=el.value;
+    el.innerHTML=opts;
+    if(el.querySelector(`option[value="${prev}"]`)) el.value=prev;
   });
 }
 
 
 // ========== NAVIGATION ==========
 const PAGE_TITLES={
-  dashboard:['Dashboard','Overview · March 2026'],
+  dashboard:['Dashboard',()=>{const n=new Date();return 'Overview · '+n.toLocaleString('en-IN',{month:'long',year:'numeric'});}],
   employees:['Employees','Employee Master'],
   attendance:['Attendance','Daily Register · Monthly View'],
-  payroll:['Payroll','March 2026 Calculation'],
+  payroll:['Payroll',()=>{const [yr,mo]=currentPayrollMonth.split('-');const mn=new Date(parseInt(yr),parseInt(mo)-1,1).toLocaleString('en-IN',{month:'long'});return mn+' '+yr+' Calculation';}],
   loans:['Loans & Advances','Recovery Tracker'],
   stock:['Stock Ledger','Inventory Management'],
   sales:['Sale Voucher','GST Billing & Sales Register'],
@@ -923,7 +932,7 @@ function showPage(page,btn){
   if(window.innerWidth<=768) closeSidebar();
   const t=PAGE_TITLES[page]||[page,''];
   document.getElementById('pageTitle').textContent=t[0];
-  document.getElementById('pageSub').textContent=t[1];
+  document.getElementById('pageSub').textContent=typeof t[1]==='function'?t[1]():t[1];
   const addBtn=document.getElementById('topbarAddBtn');
   const lbl=PAGE_BTN[page]||'';
   addBtn.textContent=lbl; addBtn.style.display=lbl?'':'none';
@@ -1049,7 +1058,13 @@ function deleteEmployee(i){
   const e=employees[i];
   if(!confirm(`Delete ${e.name} (${e.id})? This will also affect attendance and payroll records.`)) return;
   employees.splice(i,1);
-  delete attendance[e.id];
+  // Remove all attendance records for this employee across all dates
+  Object.keys(attendance).forEach(dateStr=>{
+    if(attendance[dateStr]) {
+      delete attendance[dateStr][e.id];
+      if(!Object.keys(attendance[dateStr]).length) delete attendance[dateStr];
+    }
+  });
   save(); renderEmployees(); renderDashboard();
 }
 
@@ -1128,7 +1143,7 @@ function renderAttendance(){
 }
 function markAtt(empId,status){
   setAttForDate(currentAttDate,empId,status);
-  save(); renderAttendance();
+  save().then(()=>renderAttendance());
 }
 
 
@@ -1388,7 +1403,7 @@ function saveStockItem(){
   const rate=parseFloat(document.getElementById('siRate').value)||0;
   if(!name){alert('Item name is required.');return;}
   const obj={
-    id: editStockIdx>=0?stockItems[editStockIdx].id:'STK'+String(stockItems.length+1).padStart(3,'0'),
+    id: editStockIdx>=0?stockItems[editStockIdx].id:'STK'+Date.now(),
     name, cat:document.getElementById('siCat').value,
     site:document.getElementById('siSite').value,
     qty, min:parseFloat(document.getElementById('siMin').value)||10,
@@ -1576,6 +1591,11 @@ function saveSaleVoucher(){
     items:[...saleCurrentItems], sub, cgst, sgst, igst, grand:sub+cgst+sgst+igst
   };
   saleVouchers.push(v); saleCounter++;
+  // Deduct sold quantities from stock ledger
+  v.items.forEach(it=>{
+    const si=stockItems.find(s=>s.name===it.name);
+    if(si){ si.qty=Math.max(0, si.qty - it.qty); }
+  });
   save(); alert('Voucher '+v.no+' saved!'); clearSaleForm(); renderSaleList();
 }
 function buildVoucherHTML(v){
@@ -1593,7 +1613,7 @@ function buildVoucherHTML(v){
     </div>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <thead><tr style="border-bottom:2px solid #eee;"><th style="text-align:left;padding:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999">#</th><th style="text-align:left;padding:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999">Item</th><th style="text-align:left;padding:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999">HSN</th><th style="text-align:left;padding:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999">Qty</th><th style="text-align:right;padding:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999">Rate</th><th style="text-align:right;padding:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999">Amount</th></tr></thead>
-      <tbody>'+v.items.map((it,i)=>'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:8px;font-size:12px;color:#999">'+(i+1)+'</td><td style="padding:8px;font-weight:600">'+it.name+'</td><td style="padding:8px;font-size:12px;font-family:DM Mono,monospace">'+(it.hsn||'—')+'</td><td style="padding:8px;font-family:DM Mono,monospace">'+it.qty+' '+it.unit+'</td><td style="padding:8px;text-align:right;font-family:DM Mono,monospace">'+fmt(it.rate)+'</td><td style="padding:8px;text-align:right;font-family:DM Mono,monospace;font-weight:700">'+fmt(it.amount)+'</td></tr>').join('')+'</tbody>
+      <tbody>${v.items.map((it,i)=>`<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:8px;font-size:12px;color:#999">${i+1}</td><td style="padding:8px;font-weight:600">${it.name}</td><td style="padding:8px;font-size:12px;font-family:DM Mono,monospace">${it.hsn||'—'}</td><td style="padding:8px;font-family:DM Mono,monospace">${it.qty} ${it.unit}</td><td style="padding:8px;text-align:right;font-family:DM Mono,monospace">${fmt(it.rate)}</td><td style="padding:8px;text-align:right;font-family:DM Mono,monospace;font-weight:700">${fmt(it.amount)}</td></tr>`).join('')}</tbody>
     </table>
     <div style="max-width:240px;margin-left:auto;">
       <div class="slip-row" style="color:#111"><span>Sub Total</span><span style="font-family:'DM Mono',monospace">${fmt(v.sub)}</span></div>
@@ -1849,7 +1869,7 @@ function saveVendor() {
   const phone = document.getElementById('vPhone').value.trim();
   if (!name) { alert('Vendor Name is required.'); return; }
   const obj = {
-    id: editVendorIdx >= 0 ? vendors[editVendorIdx].id : 'V' + String(vendors.length + 1).padStart(3, '0'),
+    id: editVendorIdx >= 0 ? vendors[editVendorIdx].id : 'V' + Date.now(),
     name,
     phone,
     email: document.getElementById('vEmail').value.trim(),
@@ -2010,6 +2030,8 @@ function calToggleAtt(empId, day){
     if(attendance[dateStr]){ delete attendance[dateStr][empId]; if(!Object.keys(attendance[dateStr]).length) delete attendance[dateStr]; }
   }
   save(); renderCalendar(); renderDashboard();
+  // Also refresh the daily register if it's visible, so both views stay in sync
+  if(document.getElementById('attTableBody')) renderAttendance();
 }
 
 
@@ -2018,70 +2040,87 @@ function toggleSidebar(){document.getElementById('mainSidebar').classList.toggle
 function closeSidebar(){document.getElementById('mainSidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
 
 
-// ========== SYNC URL MANAGEMENT ==========
-function saveGasUrl() {
-  const url = document.getElementById('gasUrlInput').value.trim();
-  if (!url) { alert('Please enter a URL.'); return; }
-  GAS_URL = url;
-  localStorage.setItem('otr_gas_url', url);
-  document.getElementById('gasUrlStatus').textContent = '✓ URL saved. Click Test to verify.';
-  document.getElementById('gasUrlStatus').style.color = '#4ade80';
-}
 
-async function testGasUrl() {
-  const url = document.getElementById('gasUrlInput').value.trim();
-  if (!url) { alert('Enter a URL first.'); return; }
-  GAS_URL = url;
-  const statusEl = document.getElementById('gasUrlStatus');
-  statusEl.textContent = 'Testing...';
-  statusEl.style.color = 'var(--main-text-muted)';
-  const result = await fbRestGet('test');
-  if (result !== null || GAS_URL) {
-    // Try a set
-    const ok = await fbRestSet('test', {ping: Date.now()});
-    if (ok) {
-      statusEl.textContent = '✓ Connected! Sync is working.';
-      statusEl.style.color = '#4ade80';
-      localStorage.setItem('otr_gas_url', url);
-    } else {
-      statusEl.textContent = '⚠ Could not write. Check Apps Script permissions.';
-      statusEl.style.color = '#f87171';
-    }
-  } else {
-    statusEl.textContent = '⚠ Could not connect. Check the URL.';
-    statusEl.style.color = '#f87171';
-  }
-}
 
 // ========== MODAL CLOSE ON BACKDROP ==========
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
 
 
-// ========== DATABASE: Google Apps Script Web App ==========
-// Uses Google Apps Script as backend - works on any network
-// Set up URL in User Management page
-let GAS_URL = localStorage.getItem('otr_gas_url') || '';
+// ========== DATABASE: Firebase Firestore REST API ==========
+// Pure REST — no SDK needed, works in any plain HTML file.
+// Configure in User Management → Firebase Configuration.
+
+let FB_PROJECT_ID = 'clear-ice-industries';
+let FB_API_KEY    = 'AIzaSyAKo0n6JjGFGs2GpG1zhWc3QtDB6JzcQ9Q';
+
+// ── Bootstrap config from a tiny embedded <script> tag written by saveFirebaseConfig() ──
+(function(){
+  try {
+    const raw = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('fb_cfg='));
+    if (raw) { const v=JSON.parse(decodeURIComponent(raw.slice(7))); FB_PROJECT_ID=v.p||''; FB_API_KEY=v.k||''; }
+  } catch(e){}
+  // Also try sessionStorage as a non-persistent bridge between page reloads
+  try {
+    const s = sessionStorage.getItem('fb_cfg');
+    if (s) { const v=JSON.parse(s); FB_PROJECT_ID=v.p||''; FB_API_KEY=v.k||''; }
+  } catch(e){}
+})();
+
+function _fbUrl(collection, docId) {
+  return `https://firestore.googleapis.com/v1/projects/${FB_PROJECT_ID}/databases/(default)/documents/${collection}/${docId}?key=${FB_API_KEY}`;
+}
+
+// Convert a plain JS object → Firestore document fields format
+function _toFirestore(obj) {
+  function convert(val) {
+    if (val === null || val === undefined) return { nullValue: null };
+    if (typeof val === 'boolean')  return { booleanValue: val };
+    if (typeof val === 'number')   return { doubleValue: val };
+    if (typeof val === 'string')   return { stringValue: val };
+    if (Array.isArray(val))        return { arrayValue: { values: val.map(convert) } };
+    if (typeof val === 'object')   return { mapValue: { fields: Object.fromEntries(Object.entries(val).map(([k,v])=>[k,convert(v)])) } };
+    return { stringValue: String(val) };
+  }
+  return { fields: Object.fromEntries(Object.entries(obj).map(([k,v])=>[k,convert(v)])) };
+}
+
+// Convert Firestore document fields → plain JS object
+function _fromFirestore(fields) {
+  function convert(fv) {
+    if (!fv) return null;
+    if ('nullValue'    in fv) return null;
+    if ('booleanValue' in fv) return fv.booleanValue;
+    if ('integerValue' in fv) return Number(fv.integerValue);
+    if ('doubleValue'  in fv) return fv.doubleValue;
+    if ('stringValue'  in fv) return fv.stringValue;
+    if ('arrayValue'   in fv) return (fv.arrayValue.values || []).map(convert);
+    if ('mapValue'     in fv) return _fromFirestore(fv.mapValue.fields || {});
+    return null;
+  }
+  return Object.fromEntries(Object.entries(fields || {}).map(([k,v])=>[k,convert(v)]));
+}
 
 async function fbRestGet(doc) {
-  if (!GAS_URL) return null;
+  if (!FB_PROJECT_ID || !FB_API_KEY) return null;
   try {
-    const r = await fetch(GAS_URL + '?action=get&doc=' + doc + '&t=' + Date.now(), {redirect:'follow'});
+    const r = await fetch(_fbUrl('cii_data', doc));
+    if (r.status === 404) return null;
     if (!r.ok) return null;
     const j = await r.json();
-    return j.data || null;
-  } catch(e) { return null; }
+    return _fromFirestore(j.fields);
+  } catch(e) { console.error('fbRestGet error', e); return null; }
 }
 
 async function fbRestSet(doc, obj) {
-  if (!GAS_URL) return false;
+  if (!FB_PROJECT_ID || !FB_API_KEY) return false;
   try {
-    // Use GET with body as encoded parameter to avoid CORS/POST issues with Apps Script
-    const body = encodeURIComponent(JSON.stringify(obj));
-    const r = await fetch(GAS_URL + '?action=set&doc=' + doc + '&body=' + body, {
-      redirect: 'follow'
+    const r = await fetch(_fbUrl('cii_data', doc), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(_toFirestore(obj))
     });
     return r.ok;
-  } catch(e) { return false; }
+  } catch(e) { console.error('fbRestSet error', e); return false; }
 }
 
 function showLoadingOverlay(msg) {
@@ -2102,27 +2141,15 @@ function hideLoadingOverlay() {
 
 // ========== PERSISTENCE ==========
 async function save() {
-  // Include users in main save so they sync cross-device with everything else
   const userList = _cachedUsers || [];
   const data = {employees, sites, loans, stockItems, attendance, saleVouchers, saleCounter, vendors, userList, updatedAt: Date.now()};
-  // Always save to localStorage first (instant, works offline)
-  try { localStorage.setItem('otr_local_main', JSON.stringify(data)); } catch(e){}
-  // Then try to sync to Firestore (for cross-device)
   fbRestSet('main', data);
 }
 
 async function load() {
-  showLoadingOverlay('Connecting to database...');
+  showLoadingOverlay('Connecting to Firebase...');
   let d = null;
-  // Try Firestore first (cross-device sync)
   d = await fbRestGet('main');
-  // Fall back to localStorage if Firestore unavailable
-  if (!d) {
-    try {
-      const local = localStorage.getItem('otr_local_main');
-      if (local) d = JSON.parse(local);
-    } catch(e) {}
-  }
   if (d) {
     employees    = d.employees    || DEFAULT_EMPLOYEES;
     sites        = d.sites        || DEFAULT_SITES;
@@ -2132,10 +2159,8 @@ async function load() {
     saleVouchers = d.saleVouchers || [];
     saleCounter  = d.saleCounter  || 1;
     vendors      = d.vendors      || DEFAULT_VENDORS;
-    // Load users from main doc if available (cross-device sync)
     if (d.userList && d.userList.length > 0 && !_cachedUsers) {
       _cachedUsers = d.userList;
-      try { localStorage.setItem('otr_local_users', JSON.stringify(d.userList)); } catch(e) {}
     }
   } else {
     employees = DEFAULT_EMPLOYEES; sites = DEFAULT_SITES; loans = DEFAULT_LOANS;
@@ -2188,14 +2213,12 @@ const ROLE_ACCESS = {
 const ROLE_LABELS = {admin:'Admin',manager:'Manager',staff:'Staff',sales:'Sales'};
 
 async function loadUsers() {
-  // Try GAS users doc first
+  // Try Firebase users doc first
   const d = await fbRestGet('users');
   if (d) {
-    // Handle both {list:[...]} and direct array formats
     const list = Array.isArray(d) ? d : (d.list || null);
     if (list && list.length > 0) {
       _cachedUsers = list;
-      try { localStorage.setItem('otr_local_users', JSON.stringify(list)); } catch(e) {}
       return _cachedUsers;
     }
   }
@@ -2203,35 +2226,19 @@ async function loadUsers() {
   const main = await fbRestGet('main');
   if (main && main.userList && main.userList.length > 0) {
     _cachedUsers = main.userList;
-    try { localStorage.setItem('otr_local_users', JSON.stringify(main.userList)); } catch(e) {}
     fbRestSet('users', { list: main.userList });
     return _cachedUsers;
   }
-  // Fall back to localStorage
-  try {
-    const local = localStorage.getItem('otr_local_users');
-    if (local) {
-      const parsed = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        _cachedUsers = parsed;
-        return _cachedUsers;
-      }
-    }
-  } catch(e) {}
-  // Seed default admin
+  // Seed default admin if nothing found
   const defaults = [{ id:'u1', name:'Admin', username:'admin', password:'admin123', role:'admin' }];
   await saveUsers(defaults);
   return defaults;
 }
+
 async function saveUsers(users) {
   _cachedUsers = users;
-  try { localStorage.setItem('otr_local_users', JSON.stringify(users)); } catch(e) {}
-  // Save users list directly to GAS sheet
   const ok = await fbRestSet('users', { list: users });
-  if (!ok) {
-    console.warn('User sync to GAS failed - saved locally only');
-  }
-  // Also include in main data save for extra redundancy
+  if (!ok) console.warn('User sync to Firebase failed');
   save();
 }
 async function getUsers() {
@@ -2387,18 +2394,13 @@ async function saveRolePermissions() {
   ROLE_ACCESS.sales   = pages.filter(k=>{ const el=document.getElementById('perm_sales_'+k);   return el&&el.checked; });
   ROLE_ACCESS.admin   = pages;
   const perms = {manager:ROLE_ACCESS.manager, staff:ROLE_ACCESS.staff, sales:ROLE_ACCESS.sales};
-  try { localStorage.setItem('otr_local_perms', JSON.stringify(perms)); } catch(e){}
   fbRestSet('role_permissions', perms);
-  // Apply immediately to current session
   if (currentUser) applyRoleAccess(currentUser.role);
   alert('Permissions saved and applied!');
 }
 
 async function loadRolePermissions() {
-  let d = await fbRestGet('role_permissions');
-  if (!d) {
-    try { const l = localStorage.getItem('otr_local_perms'); if (l) d = JSON.parse(l); } catch(e){}
-  }
+  const d = await fbRestGet('role_permissions');
   if (d) {
     if (d.manager) ROLE_ACCESS.manager = d.manager;
     if (d.staff)   ROLE_ACCESS.staff   = d.staff;
@@ -2406,40 +2408,7 @@ async function loadRolePermissions() {
   }
 }
 
-// ========== SYNC URL MANAGEMENT ==========
-function saveGasUrl() {
-  const url = document.getElementById('gasUrlInput').value.trim();
-  if (!url) { alert('Please enter a URL.'); return; }
-  GAS_URL = url;
-  localStorage.setItem('otr_gas_url', url);
-  document.getElementById('gasUrlStatus').textContent = '✓ URL saved. Click Test to verify.';
-  document.getElementById('gasUrlStatus').style.color = '#4ade80';
-}
 
-async function testGasUrl() {
-  const url = document.getElementById('gasUrlInput').value.trim();
-  if (!url) { alert('Enter a URL first.'); return; }
-  GAS_URL = url;
-  const statusEl = document.getElementById('gasUrlStatus');
-  statusEl.textContent = 'Testing...';
-  statusEl.style.color = 'var(--main-text-muted)';
-  const result = await fbRestGet('test');
-  if (result !== null || GAS_URL) {
-    // Try a set
-    const ok = await fbRestSet('test', {ping: Date.now()});
-    if (ok) {
-      statusEl.textContent = '✓ Connected! Sync is working.';
-      statusEl.style.color = '#4ade80';
-      localStorage.setItem('otr_gas_url', url);
-    } else {
-      statusEl.textContent = '⚠ Could not write. Check Apps Script permissions.';
-      statusEl.style.color = '#f87171';
-    }
-  } else {
-    statusEl.textContent = '⚠ Could not connect. Check the URL.';
-    statusEl.style.color = '#f87171';
-  }
-}
 
 // ========== MODAL CLOSE ON BACKDROP ==========
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
@@ -2448,10 +2417,18 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 window.addEventListener('load', async () => {
   await load();
   await loadRolePermissions();
-  // Populate GAS URL input if saved
-  const savedUrl = localStorage.getItem('otr_gas_url') || '';
-  const gasInput = document.getElementById('gasUrlInput');
-  if (gasInput && savedUrl) gasInput.value = savedUrl;
+  // Populate Firebase config inputs if saved
+  try {
+    const raw = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('fb_cfg='));
+    const s = sessionStorage.getItem('fb_cfg');
+    const cfg = raw ? JSON.parse(decodeURIComponent(raw.slice(7))) : (s ? JSON.parse(s) : null);
+    if (cfg) {
+      const pid = document.getElementById('fbProjectId');
+      const key = document.getElementById('fbApiKey');
+      if (pid) pid.value = cfg.p || '';
+      if (key) key.value = cfg.k || '';
+    }
+  } catch(e){}
   document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   populateSiteSelects();
   renderDashboard();
