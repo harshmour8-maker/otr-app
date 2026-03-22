@@ -2252,7 +2252,7 @@ async function getUsers() {
 
 function _saveSessionCookie(user) {
   const val = encodeURIComponent(JSON.stringify({id:user.id, username:user.username, name:user.name, role:user.role}));
-  document.cookie = 'cii_session=' + val + '; max-age=' + (30*24*60*60) + '; path=/; SameSite=Lax';
+  document.cookie = 'cii_session=' + val + '; max-age=' + (30*24*60*60) + '; path=/; SameSite=Lax; Secure';
 }
 function _clearSessionCookie() {
   document.cookie = 'cii_session=; max-age=0; path=/; SameSite=Lax';
