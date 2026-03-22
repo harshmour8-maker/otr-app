@@ -258,9 +258,43 @@
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
     th,td{white-space:nowrap}
   }
+
+  /* ── PULL TO REFRESH ── */
+  #pullIndicator{
+    position:fixed;top:0;left:0;right:0;z-index:9998;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    height:0;overflow:hidden;
+    background:rgba(10,10,10,0.95);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    transition:height 0.15s ease;
+    color:rgba(255,255,255,0.55);
+    font-family:'DM Sans',sans-serif;
+    font-size:13px;font-weight:500;
+    pointer-events:none;
+  }
+  #pullIndicator.visible{height:56px;}
+  #pullIndicator.refreshing{height:56px;color:white;}
+  .pull-spinner{
+    width:18px;height:18px;border-radius:50%;
+    border:2px solid rgba(255,255,255,0.15);
+    border-top-color:white;
+    transition:transform 0.15s;
+    flex-shrink:0;
+  }
+  #pullIndicator.refreshing .pull-spinner{
+    animation:spin 0.7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
+
+<!-- PULL TO REFRESH INDICATOR -->
+<div id="pullIndicator">
+  <div class="pull-spinner" id="pullSpinner"></div>
+  <span id="pullLabel">Pull down to refresh</span>
+</div>
 
 <!-- ==================== LOGIN SCREEN ==================== -->
 <div id="loginOverlay">
@@ -2440,6 +2474,74 @@ async function loadRolePermissions() {
 
 // ========== MODAL CLOSE ON BACKDROP ==========
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.classList.remove('open');}));
+
+// ========== PULL TO REFRESH ==========
+(function(){
+  const THRESHOLD = 80;
+  const MAX_PULL  = 120;
+  let startY = 0, currentY = 0, pulling = false, refreshing = false;
+
+  const indicator = document.getElementById('pullIndicator');
+  const spinner   = document.getElementById('pullSpinner');
+  const label     = document.getElementById('pullLabel');
+
+  function canPull(){ return (window.scrollY <= 0); }
+
+  document.addEventListener('touchstart', e => {
+    if (!canPull()) return;
+    startY = e.touches[0].clientY; pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling || refreshing) return;
+    currentY = e.touches[0].clientY;
+    const distance = Math.min(currentY - startY, MAX_PULL);
+    if (distance <= 0) return;
+    const ratio = Math.min(distance / THRESHOLD, 1);
+    spinner.style.transform = `rotate(${ratio * 300}deg)`;
+    indicator.classList.add('visible');
+    if (distance >= THRESHOLD) {
+      label.textContent = 'Release to refresh';
+      indicator.style.borderBottomColor = 'rgba(74,222,128,0.3)';
+    } else {
+      label.textContent = 'Pull down to refresh';
+      indicator.style.borderBottomColor = 'rgba(255,255,255,0.08)';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', async () => {
+    if (!pulling || refreshing) return;
+    pulling = false;
+    const distance = currentY - startY;
+    if (distance >= THRESHOLD) {
+      refreshing = true;
+      indicator.classList.add('refreshing');
+      label.textContent = 'Refreshing\u2026';
+      indicator.style.borderBottomColor = 'rgba(74,222,128,0.3)';
+      try {
+        await load();
+        renderDashboard();
+        const activePage = document.querySelector('.page:not(.hidden)');
+        if (activePage) {
+          const pageId = activePage.id.replace('page-','');
+          if (pageId === 'employees')  renderEmployees();
+          if (pageId === 'attendance') renderAttendance();
+          if (pageId === 'payroll')    renderPayroll();
+          if (pageId === 'loans')      renderLoans();
+          if (pageId === 'stock')      renderStock();
+          if (pageId === 'vendors')    renderVendors();
+          if (pageId === 'usermgmt')   renderUsers();
+        }
+        label.textContent = '\u2713 Updated';
+      } catch(err) { label.textContent = 'Failed to refresh'; }
+      await new Promise(r => setTimeout(r, 700));
+    }
+    indicator.classList.remove('visible','refreshing');
+    indicator.style.borderBottomColor = '';
+    spinner.style.transform = '';
+    refreshing = false; startY = 0; currentY = 0;
+  });
+})();
 
 // ========== INIT ==========
 window.addEventListener('load', async () => {
