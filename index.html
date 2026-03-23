@@ -607,7 +607,7 @@
 <!-- STOCK -->
 <div class="page hidden" id="page-stock">
   <div class="section-header">
-    <div><div class="section-title">Stock Ledger</div><div class="section-subtitle">Inventory management across all sites</div></div>
+    <div><div class="section-title">Stock Ledger</div><div class="section-subtitle">Inventory management</div></div>
     <div class="spacer"></div>
     <button class="btn btn-primary" onclick="openStockModal()">+ Add Item</button>
   </div>
@@ -778,7 +778,7 @@
       <input class="form-input" style="width:200px" placeholder="🔍 Search customer..." oninput="renderSaleList(this.value)" id="saleSearchInput"/>
     </div>
     <div id="saleDateSummary" style="display:none;background:rgba(255,255,255,0.05);border:1px solid var(--main-card-border);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:var(--main-text-muted);gap:24px;flex-wrap:wrap;"></div>
-    <div class="table-card table-wrap"><table><thead><tr><th>Voucher No.</th><th>PO No.</th><th>Date</th><th>Customer</th><th>Site</th><th>Items</th><th>Sub Total</th><th>GST</th><th>Grand Total</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="saleListBody"></tbody></table></div>
+    <div class="table-card table-wrap"><table><thead><tr><th>Voucher No.</th><th>PO No.</th><th>Date</th><th>Customer</th><th>Items</th><th>Sub Total</th><th>GST</th><th>Grand Total</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="saleListBody"></tbody></table></div>
   </div>
 </div>
 
@@ -1054,10 +1054,6 @@
           <option>Other</option>
         </select>
       </div>
-      <div class="form-group">
-        <div class="form-label">Site</div>
-        <select class="form-select" id="siSite"></select>
-      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1179,12 +1175,12 @@ const DEFAULT_LOANS = [
   {id:'L003',empId:'EMP005',amount:4000,emi:1000,paid:4000,purpose:'Education',status:'closed'}
 ];
 const DEFAULT_STOCK = [
-  {id:'STK001',name:'Insulated Mould Tray',cat:'Packaging',site:'S1',qty:450,min:100,rate:120,supplier:'CoolPack Ind.'},
-  {id:'STK002',name:'Ammonia Refrigerant',cat:'Chemicals',site:'S1',qty:80,min:50,rate:2800,supplier:'ChemCool Ltd.'},
-  {id:'STK003',name:'HDPE Water Pipe 2"',cat:'Refrigeration',site:'S2',qty:18,min:20,rate:340,supplier:'PipeMaster'},
-  {id:'STK004',name:'Ice Block Wrapper',cat:'Packaging',site:'S2',qty:5,min:50,rate:15,supplier:'WrappEx'},
-  {id:'STK005',name:'Compressor Belt A',cat:'Refrigeration',site:'S3',qty:12,min:5,rate:650,supplier:'FreezeTech'},
-  {id:'STK006',name:'Coolant Pump 1HP',cat:'Electrical',site:'S3',qty:3,min:2,rate:8500,supplier:'PowerPump Co.'}
+  {id:'STK001',name:'Insulated Mould Tray',cat:'Packaging',qty:450,min:100,rate:120,supplier:'CoolPack Ind.'},
+  {id:'STK002',name:'Ammonia Refrigerant',cat:'Chemicals',qty:80,min:50,rate:2800,supplier:'ChemCool Ltd.'},
+  {id:'STK003',name:'HDPE Water Pipe 2"',cat:'Refrigeration',qty:18,min:20,rate:340,supplier:'PipeMaster'},
+  {id:'STK004',name:'Ice Block Wrapper',cat:'Packaging',qty:5,min:50,rate:15,supplier:'WrappEx'},
+  {id:'STK005',name:'Compressor Belt A',cat:'Refrigeration',qty:12,min:5,rate:650,supplier:'FreezeTech'},
+  {id:'STK006',name:'Coolant Pump 1HP',cat:'Electrical',qty:3,min:2,rate:8500,supplier:'PowerPump Co.'}
 ];
 
 const DEFAULT_VENDORS = [
@@ -1255,7 +1251,7 @@ function populateSiteSelects(){
   const opts = sites.length
     ? sites.map(s=>`<option value="${s.code}">${s.name}</option>`).join('')
     : '<option value="S1">Main Site</option>';
-  ['empSite','siSite','saleSite'].forEach(id=>{
+  ['empSite','saleSite'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const prev=el.value;
     el.innerHTML=opts;
@@ -1836,7 +1832,6 @@ function openStockModal(){
   ['siName','siQty','siMin','siRate','siSupplier'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('siCat').value='Refrigeration';
   document.getElementById('siUnit').value='Nos';
-  populateSiteSelects();
   openModal('stockModal');
 }
 function editStock(i){
@@ -1850,8 +1845,6 @@ function editStock(i){
   document.getElementById('siRate').value=item.rate;
   document.getElementById('siSupplier').value=item.supplier;
   document.getElementById('siUnit').value=item.unit||'Nos';
-  populateSiteSelects();
-  document.getElementById('siSite').value=item.site;
   openModal('stockModal');
 }
 function saveStockItem(){
@@ -1862,7 +1855,6 @@ function saveStockItem(){
   const obj={
     id: editStockIdx>=0?stockItems[editStockIdx].id:'STK'+Date.now(),
     name, cat:document.getElementById('siCat').value,
-    site:document.getElementById('siSite').value,
     qty, min:parseFloat(document.getElementById('siMin').value)||10,
     rate, supplier:document.getElementById('siSupplier').value.trim(),
     unit: document.getElementById('siUnit').value||'Nos'
@@ -2107,27 +2099,15 @@ function renderStockJournal(){
 function refreshStockDropdown(){
   const sel = document.getElementById('saleStockPicker');
   if(!sel) return;
-  // Group by site
-  const bySite = {};
-  stockItems.forEach(item => {
-    const sname = siteLabel(item.site);
-    if(!bySite[sname]) bySite[sname] = [];
-    bySite[sname].push(item);
-  });
   sel.innerHTML = '<option value="">— Pick an item from stock —</option>';
-  Object.entries(bySite).forEach(([siteName, items]) => {
-    const grp = document.createElement('optgroup');
-    grp.label = siteName;
-    items.forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item.id;
-      const stock = item.qty > 0 ? item.qty + ' ' + (item.unit||'units') + ' available' : 'Out of stock';
-      opt.textContent = item.name + '  (' + stock + ')';
-      opt.disabled = item.qty <= 0;
-      if(item.qty <= 0) opt.style.color = '#f87171';
-      grp.appendChild(opt);
-    });
-    sel.appendChild(grp);
+  stockItems.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    const stock = item.qty > 0 ? item.qty + ' ' + (item.unit||'units') + ' available' : 'Out of stock';
+    opt.textContent = item.name + '  (' + stock + ')';
+    opt.disabled = item.qty <= 0;
+    if(item.qty <= 0) opt.style.color = '#f87171';
+    sel.appendChild(opt);
   });
 }
 
@@ -2157,7 +2137,7 @@ function onStockItemPicked(stockId){
   if(bar){
     if(item.qty > 0){
       bar.style.display = 'block';
-      bar.innerHTML = '📦 <strong>' + item.name + '</strong> &nbsp;·&nbsp; ' + item.qty + ' units available &nbsp;·&nbsp; ₹' + Number(item.rate).toLocaleString('en-IN') + ' per unit &nbsp;·&nbsp; Site: ' + siteLabel(item.site);
+      bar.innerHTML = '📦 <strong>' + item.name + '</strong> &nbsp;·&nbsp; ' + item.qty + ' units available &nbsp;·&nbsp; ₹' + Number(item.rate).toLocaleString('en-IN') + ' per unit';
       bar.style.color = '#4ade80';
       bar.style.borderColor = 'rgba(74,222,128,0.2)';
       bar.style.background = 'rgba(74,222,128,0.08)';
@@ -2260,7 +2240,6 @@ function saveSaleVoucher(){
     customer, phone:document.getElementById('salePhone').value,
     poNumber:document.getElementById('salePONumber').value.trim(),
     vendorId:(document.getElementById('saleVendorId')||{}).value||'',
-    site:document.getElementById('saleSite').value,
     gstType:type, gstRate:rate,
     payMode:document.getElementById('salePayMode').value,
     notes:document.getElementById('saleNotes').value,
@@ -2275,7 +2254,6 @@ function saveSaleVoucher(){
   save(); alert('Voucher '+v.no+' saved!'); clearSaleForm(); renderSaleList();
 }
 function buildVoucherHTML(v){
-  const s=sites.find(x=>x.code===v.site)||{name:v.site,location:''};
   const vendor=vendors.find(x=>x.id===v.vendorId)||null;
   const gstRows=v.gstType==='gst'?`<div class="slip-row"><span>CGST (${v.gstRate/2}%)</span><span>${fmt(v.cgst)}</span></div><div class="slip-row"><span>SGST (${v.gstRate/2}%)</span><span>${fmt(v.sgst)}</span></div>`:v.gstType==='igst'?`<div class="slip-row"><span>IGST (${v.gstRate}%)</span><span>${fmt(v.igst)}</span></div>`:'';
   return `<div style="border:2px solid #111;border-radius:12px;padding:24px;background:white;color:#111;">
@@ -2308,7 +2286,7 @@ function printSaleVoucher(){
   const rate=parseFloat(document.getElementById('saleGstRate').value)||0;
   let cgst=0,sgst=0,igst=0;
   if(type==='gst'){cgst=sub*(rate/2/100);sgst=cgst;}else if(type==='igst'){igst=sub*(rate/100);}
-  const temp={no:document.getElementById('saleVoucherNo').value,date:document.getElementById('saleDate').value,customer:c,phone:document.getElementById('salePhone').value,poNumber:document.getElementById('salePONumber').value.trim(),vendorId:(document.getElementById('saleVendorId')||{}).value||'',site:document.getElementById('saleSite').value,gstType:type,gstRate:rate,payMode:document.getElementById('salePayMode').value,notes:document.getElementById('saleNotes').value,items:[...saleCurrentItems],sub,cgst,sgst,igst,grand:sub+cgst+sgst+igst};
+  const temp={no:document.getElementById('saleVoucherNo').value,date:document.getElementById('saleDate').value,customer:c,phone:document.getElementById('salePhone').value,poNumber:document.getElementById('salePONumber').value.trim(),vendorId:(document.getElementById('saleVendorId')||{}).value||'',gstType:type,gstRate:rate,payMode:document.getElementById('salePayMode').value,notes:document.getElementById('saleNotes').value,items:[...saleCurrentItems],sub,cgst,sgst,igst,grand:sub+cgst+sgst+igst};
   document.getElementById('salePrintContent').innerHTML=buildVoucherHTML(temp);
   openModal('salePrintModal');
 }
@@ -2350,7 +2328,7 @@ function renderSaleList(searchVal){
       summaryEl.style.display='none';
     }
   }
-  if(!list.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--main-text-muted)">No vouchers found.</td></tr>';return;}
+  if(!list.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--main-text-muted)">No vouchers found.</td></tr>';return;}
   tb.innerHTML=list.map((v)=>{
     const realIdx=saleVouchers.indexOf(v);
     return `<tr>
@@ -2358,7 +2336,6 @@ function renderSaleList(searchVal){
       <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--main-text-muted)">${v.poNumber||'—'}</td>
       <td style="font-family:'JetBrains Mono';font-size:12px">${v.date}</td>
       <td><div class="emp-name">${esc(v.customer)}</div><div class="emp-id">${esc(v.phone||'')}${v.vendorId?' · <span style="color:#4ade80;font-size:10px">✓ Vendor</span>':''}</div></td>
-      <td style="font-size:12px;color:var(--main-text-muted)">${siteLabel(v.site)}</td>
       <td style="font-family:'JetBrains Mono';text-align:center">${v.items.length}</td>
       <td><span class="money-sm">${fmt(v.sub)}</span></td>
       <td><span class="money-sm">${fmt(v.cgst+v.sgst+v.igst)}</span></td>
