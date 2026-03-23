@@ -528,7 +528,7 @@
   </div>
   <div class="table-card table-wrap">
     <table>
-      <thead><tr><th>Employee</th><th>Type</th><th>Daily Wage / Salary</th><th>Joining Date</th><th>PF</th><th>ESI</th><th>Phone</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Employee</th><th>Type</th><th>Site</th><th>Daily Wage / Salary</th><th>Joining Date</th><th>PF</th><th>ESI</th><th>Phone</th><th>Actions</th></tr></thead>
       <tbody id="empTableBody"></tbody>
     </table>
   </div>
@@ -543,6 +543,9 @@
     </div>
     <div class="spacer"></div>
     <div style="display:flex;align-items:center;gap:6px;">
+      <select class="form-select" id="attSiteFilter" onchange="renderAttendance()" style="width:150px;padding:6px 10px;font-size:12px;">
+        <option value="">All Sites</option>
+      </select>
       <button class="btn btn-secondary btn-sm" onclick="shiftAttDate(-1)" title="Previous Day" style="font-size:16px;padding:5px 12px;">‹</button>
       <input type="date" class="form-input" id="attDatePicker" style="width:148px;padding:6px 10px;font-size:13px;" onchange="onAttDatePicked(this.value)"/>
       <button class="btn btn-secondary btn-sm" onclick="shiftAttDate(1)" title="Next Day" style="font-size:16px;padding:5px 12px;">›</button>
@@ -560,6 +563,9 @@
       <div><div class="section-title">Monthly View</div><div class="section-subtitle">Click any date cell to cycle P → H → A → clear</div></div>
       <div class="spacer"></div>
       <div style="display:flex;align-items:center;gap:6px;">
+        <select class="form-select" id="calSiteFilter" onchange="renderCalendar()" style="width:150px;padding:6px 10px;font-size:12px;">
+          <option value="">All Sites</option>
+        </select>
         <button class="btn btn-secondary btn-sm" onclick="shiftCalMonth(-1)" style="font-size:16px;padding:5px 12px;">‹</button>
         <input type="month" class="form-input" id="calMonthPicker" style="width:148px;padding:6px 10px;font-size:13px;" onchange="onCalMonthPicked(this.value)"/>
         <button class="btn btn-secondary btn-sm" onclick="shiftCalMonth(1)" style="font-size:16px;padding:5px 12px;">›</button>
@@ -588,7 +594,7 @@
     <button class="btn btn-secondary btn-sm" onclick="exportPayrollCSV()">⬇ Export CSV</button>
   </div>
   <div class="table-card table-wrap">
-    <table><thead><tr><th>Employee</th><th>Days Present</th><th>Gross</th><th>PF (12%)</th><th>ESI (0.75%)</th><th>Loan EMI</th><th>Net Pay</th><th>Slip</th></tr></thead><tbody id="payrollTableBody"></tbody></table>
+    <table><thead><tr><th>Employee</th><th>Site</th><th>Days Present</th><th>Gross</th><th>PF (12%)</th><th>ESI (0.75%)</th><th>Loan EMI</th><th>Net Pay</th><th>Slip</th></tr></thead><tbody id="payrollTableBody"></tbody></table>
   </div>
 </div>
 
@@ -613,7 +619,7 @@
   </div>
   <div class="alert-strip" id="stockAlert" style="display:none">⚠ <span id="stockAlertText"></span></div>
   <div class="table-card table-wrap">
-    <table><thead><tr><th>Item</th><th>Category</th><th>Qty</th><th>Min Level</th><th>Rate (₹)</th><th>Supplier</th><th>Status</th><th>Actions</th></tr></thead><tbody id="stockTableBody"></tbody></table>
+    <table><thead><tr><th>Item</th><th>Category</th><th>Site</th><th>Qty</th><th>Min Level</th><th>Rate (₹)</th><th>Supplier</th><th>Status</th><th>Actions</th></tr></thead><tbody id="stockTableBody"></tbody></table>
   </div>
 </div>
 
@@ -720,7 +726,7 @@
           <div style="font-family:'Bebas Neue';font-size:18px;letter-spacing:1px;margin-bottom:20px;">VOUCHER DETAILS</div>
           <div class="form-row"><div class="form-group"><div class="form-label">Voucher No.</div><input class="form-input" id="saleVoucherNo" readonly/></div><div class="form-group"><div class="form-label">Date</div><input class="form-input" id="saleDate" type="date"/></div></div>
           <div class="form-row"><div class="form-group"><div class="form-label">PO Number</div><input class="form-input" id="salePONumber" placeholder="PO-XXXX (optional)"/></div><div class="form-group"><div class="form-label">Customer / Vendor Name</div><input class="form-input" id="saleCustomer" placeholder="Type or select from vendor master" list="vendorDatalist" oninput="onVendorNameInput(this.value)" autocomplete="off"/><datalist id="vendorDatalist"></datalist></div></div>
-          <div class="form-row"><div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="salePhone" placeholder="9XXXXXXXXX"/></div><div style="display:none"><select id="saleSite"><option value="S1">Main</option></select></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="salePhone" placeholder="9XXXXXXXXX"/></div><div class="form-group"><div class="form-label">Site</div><select class="form-select" id="saleSite"><option value="S1">Main</option></select></div></div>
           <div style="margin-top:-8px;margin-bottom:4px"><button type="button" class="btn btn-secondary btn-sm" onclick="showPage('vendors',null)" style="font-size:11px;padding:4px 10px">🏢 Browse Vendor Master</button></div>
           <div class="form-row"><div class="form-group"><div class="form-label">GST Type</div><select class="form-select" id="saleGstType" onchange="updateGstLabel()"><option value="none">No GST</option><option value="gst">GST (CGST+SGST)</option><option value="igst">IGST (Inter-state)</option></select></div><div class="form-group"><div class="form-label">GST Rate (%)</div><select class="form-select" id="saleGstRate" onchange="recalcSale()"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div></div>
           <div class="form-row single"><div class="form-group"><div class="form-label">Payment Mode</div><select class="form-select" id="salePayMode"><option>Cash</option><option>UPI</option><option>Cheque</option><option>Credit (Party)</option></select></div></div>
@@ -915,7 +921,7 @@
       <div class="form-group"><div class="form-label" id="empWageLabel">Daily Wage (₹) *</div><input class="form-input" id="empWage" placeholder="500" type="number"/></div>
     </div>
     <div class="form-row">
-<div style="display:none"><select id="empSite"><option value="S1">Main</option></select></div>
+      <div class="form-group"><div class="form-label">Site *</div><select class="form-select" id="empSite"><option value="S1">Main</option></select></div>
       <div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="empPhone" placeholder="9XXXXXXXXX" type="tel"/></div>
     </div>
     <div class="form-row">
@@ -1261,6 +1267,16 @@ function populateSiteSelects(){
     el.innerHTML=opts;
     if(el.querySelector(`option[value="${prev}"]`)) el.value=prev;
   });
+  // Populate filter dropdowns (with "All Sites" default)
+  const filterOpts = '<option value="">All Sites</option>' + (sites.length
+    ? sites.map(s=>`<option value="${s.code}">${s.name}</option>`).join('')
+    : '<option value="S1">Main Site</option>');
+  ['attSiteFilter','calSiteFilter'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const prev=el.value;
+    el.innerHTML=filterOpts;
+    if(prev && el.querySelector(`option[value="${prev}"]`)) el.value=prev;
+  });
 }
 
 
@@ -1365,6 +1381,7 @@ function renderEmployees(){
     html+=`<tr>
       <td><div class="emp-info"><div class="emp-avatar">${initials(e.name)}</div><div><div class="emp-name">${esc(e.name)}</div><div class="emp-id">${esc(e.id)}</div></div></div></td>
       <td><span class="badge-pill ${e.type==='daily'?'badge-active':'badge-half'}">${e.type==='daily'?'Daily':'Salaried'}</span></td>
+      <td style="font-size:12px;color:var(--main-text-muted)">${siteLabel(e.site)}</td>
       <td><span class="money">${fmt(e.wage)}</span></td>
       <td>${e.pf?'<span class="badge-pill badge-present">Yes</span>':'<span class="badge-pill badge-absent">No</span>'}</td>
       <td>${e.esi?'<span class="badge-pill badge-present">Yes</span>':'<span class="badge-pill badge-absent">No</span>'}</td>
@@ -1595,6 +1612,7 @@ function renderPayroll(){
     const net=gross-pf-esi-emi;
     payHtml+=`<tr>
       <td><div class="emp-info"><div class="emp-avatar">${initials(e.name)}</div><div><div class="emp-name">${esc(e.name)}</div><div class="emp-id">${esc(e.id)}</div></div></div></td>
+      <td style="font-size:12px;color:var(--main-text-muted)">${siteLabel(e.site)}</td>
       <td style="text-align:center;font-family:'JetBrains Mono'">${e.type==='salary'?(displayDays+(joinNote?'<span style="font-size:9px;color:#fbbf24;display:block">'+joinNote+'</span>':'<span style="font-size:10px;color:var(--main-text-muted);display:block">+4 PL'+(absentDays>PAID_LEAVES?' (−'+(absentDays-PAID_LEAVES)+' deducted)':'')+'</span>')):displayDays} ${e.type==='daily'&&h>0?'<span style="font-size:10px;color:var(--main-text-muted)">('+p+'P+'+h+'H)</span>':''}</td>
       <td><span class="money">${fmt(gross)}</span></td>
       <td><span class="money-sm" style="color:var(--main-text-muted)">${pf?fmt(pf):'—'}</span></td>
@@ -1815,6 +1833,7 @@ function renderStock(){
     stHtml+=`<tr>
       <td><div class="emp-name">${esc(item.name)}</div><div class="emp-id money-sm">${esc(item.id)}</div></td>
       <td style="font-size:12px;color:var(--main-text-muted)">${esc(item.cat)}</td>
+      <td style="font-size:12px;color:var(--main-text-muted)">${siteLabel(item.site)}</td>
       <td style="font-weight:700;font-family:'JetBrains Mono'">${item.qty}</td>
       <td style="font-family:'JetBrains Mono';font-size:12px;color:var(--main-text-muted)">${item.min}</td>
       <td><span class="money-sm">${fmt(item.rate)}</span></td>
