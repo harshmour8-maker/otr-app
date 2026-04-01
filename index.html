@@ -2466,6 +2466,24 @@ function applyXmlMonthFilter(val){
 }
 
 // ========== TALLY PRIME XML EXPORT ==========
+// ========== TALLY PRIME XML EXPORT (DayBook format) ==========
+// Company: Clear Ice Industries | GSTIN: 18AIOPG8152B2Z9 | State: Assam
+const TALLY_CMP = {
+  name:'Clear Ice Industries', gstin:'18AIOPG8152B2Z9', state:'Assam',
+  country:'India', regType:'Regular', regName:'Assam Registration',
+  salesLedger:'App Sales', partyLedger:'Cash Sales'
+};
+
+function _uuid(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});}
+function _tallyDate(d){if(!d)return '';const[y,m,dd]=d.split('-');return y+m+dd;}
+function _escXml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+function _fmtQty(qty,unit){return ' '+Number(qty).toFixed(2)+' '+(unit||'Nos');}
+function _fmtRate(rate,unit){return Number(rate).toFixed(2)+'/'+(unit||'Nos');}
+function _na(){return '&#4; Not Applicable';}
+
+// Empty list helper - Tally expects these
+function _emptyLists(names){return names.map(n=>'   <'+n+'>   </'+n+'>').join('\n')+'\n';}
+
 function exportVoucherXML(){
   const fromEl=document.getElementById('saleFilterFrom');
   const toEl=document.getElementById('saleFilterTo');
@@ -2475,134 +2493,382 @@ function exportVoucherXML(){
   if(from) list=list.filter(v=>v.date>=from);
   if(to) list=list.filter(v=>v.date<=to);
   if(!list.length){alert('No vouchers to export. Apply a month/date filter first.');return;}
-  // Build Tally Prime compliant XML
-  let xml='<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml+='<ENVELOPE>\n';
-  xml+='<HEADER>\n<TALLYREQUEST>Import Data</TALLYREQUEST>\n</HEADER>\n';
-  xml+='<BODY>\n<IMPORTDATA>\n<REQUESTDESC>\n<REPORTNAME>Vouchers</REPORTNAME>\n<STATICVARIABLES>\n<SVCURRENTCOMPANY>Clear Ice Industries</SVCURRENTCOMPANY>\n</STATICVARIABLES>\n</REQUESTDESC>\n<REQUESTDATA>\n';
+
+  let xml='<ENVELOPE>\n';
+  xml+=' <HEADER>\n  <TALLYREQUEST>Import Data</TALLYREQUEST>\n </HEADER>\n';
+  xml+=' <BODY>\n  <IMPORTDATA>\n   <REQUESTDESC>\n';
+  xml+='    <REPORTNAME>All Masters</REPORTNAME>\n';
+  xml+='    <STATICVARIABLES>\n     <SVCURRENTCOMPANY>'+_escXml(TALLY_CMP.name)+'</SVCURRENTCOMPANY>\n    </STATICVARIABLES>\n';
+  xml+='   </REQUESTDESC>\n   <REQUESTDATA>\n';
+
   list.forEach(v=>{
     const vendor=vendors.find(x=>x.id===v.vendorId)||null;
-    const partyName='Cash';
-    const vDate=formatTallyDate(v.date);
-    xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-    xml+='<VOUCHER VCHTYPE="Sales" ACTION="Create" OBJVIEW="Invoice Voucher View">\n';
-    xml+=`<DATE>${vDate}</DATE>\n`;
-    xml+=`<VOUCHERTYPENAME>Sales</VOUCHERTYPENAME>\n`;
-    xml+=`<VOUCHERNUMBER>${escXml(v.no)}</VOUCHERNUMBER>\n`;
-    xml+=`<REFERENCE>${escXml(v.no)}</REFERENCE>\n`;
-    xml+=`<PARTYLEDGERNAME>${escXml(partyName)}</PARTYLEDGERNAME>\n`;
-    xml+=`<NARRATION>Cash Sale to ${escXml(v.customer)} ${v.phone?'('+v.phone+') ':''}${v.notes?'- '+escXml(v.notes):''}</NARRATION>\n`;
-    xml+=`<EFFECTIVEDATE>${vDate}</EFFECTIVEDATE>\n`;
-    if(v.poNumber) xml+=`<ORDERNUMBER>${escXml(v.poNumber)}</ORDERNUMBER>\n`;
-    // Party ledger entry (Debit)
-    xml+='<ALLLEDGERENTRIES.LIST>\n';
-    xml+=`<LEDGERNAME>${escXml(partyName)}</LEDGERNAME>\n`;
-    xml+=`<ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>\n`;
-    xml+=`<AMOUNT>-${v.grand.toFixed(2)}</AMOUNT>\n`;
-    xml+='</ALLLEDGERENTRIES.LIST>\n';
-    // Sales ledger entry (Credit)
-    xml+='<ALLLEDGERENTRIES.LIST>\n';
-    xml+=`<LEDGERNAME>App Sales</LEDGERNAME>\n`;
-    xml+=`<ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
-    xml+=`<AMOUNT>${v.sub.toFixed(2)}</AMOUNT>\n`;
-    xml+='</ALLLEDGERENTRIES.LIST>\n';
-    // GST entries - dynamic ledger names based on voucher rate
-    if(v.gstType==='gst'&&v.cgst>0){
-      const halfRate=(v.gstRate/2);
-      const cgstName='Output CGST '+halfRate+'%';
-      const sgstName='Output SGST '+halfRate+'%';
-      xml+='<ALLLEDGERENTRIES.LIST>\n';
-      xml+=`<LEDGERNAME>${escXml(cgstName)}</LEDGERNAME>\n`;
-      xml+=`<ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
-      xml+=`<AMOUNT>${v.cgst.toFixed(2)}</AMOUNT>\n`;
-      xml+='</ALLLEDGERENTRIES.LIST>\n';
-      xml+='<ALLLEDGERENTRIES.LIST>\n';
-      xml+=`<LEDGERNAME>${escXml(sgstName)}</LEDGERNAME>\n`;
-      xml+=`<ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
-      xml+=`<AMOUNT>${v.sgst.toFixed(2)}</AMOUNT>\n`;
-      xml+='</ALLLEDGERENTRIES.LIST>\n';
-    }
-    if(v.gstType==='igst'&&v.igst>0){
-      const igstName='Output IGST '+v.gstRate+'%';
-      xml+='<ALLLEDGERENTRIES.LIST>\n';
-      xml+=`<LEDGERNAME>${escXml(igstName)}</LEDGERNAME>\n`;
-      xml+=`<ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
-      xml+=`<AMOUNT>${v.igst.toFixed(2)}</AMOUNT>\n`;
-      xml+='</ALLLEDGERENTRIES.LIST>\n';
-    }
-    // Inventory entries
+    const partyName=v.customer||TALLY_CMP.partyLedger;
+    const partyGstin=vendor&&vendor.gstin?vendor.gstin:'';
+    const partyRegType=vendor?(vendor.gstType==='registered'?'Regular':vendor.gstType==='composite'?'Composition':'Unregistered/Consumer'):'Unregistered/Consumer';
+    const partyState=vendor&&vendor.state?vendor.state:TALLY_CMP.state;
+    const isInterState=partyState!==TALLY_CMP.state;
+    const vDate=_tallyDate(v.date);
+    const guid=_uuid();
+    const gstRate=v.gstRate||5;
+    const halfRate=gstRate/2;
+
+    // Calculate exclusive amounts from inclusive
+    const grandTotal=v.grand;
+    const taxableValue=v.sub;
+    const cgstAmt=v.cgst||0;
+    const sgstAmt=v.sgst||0;
+    const igstAmt=v.igst||0;
+    // Round off = difference between rounded grand and exact (taxable + taxes)
+    const exactTotal=taxableValue+cgstAmt+sgstAmt+igstAmt;
+    const roundOff=Math.round((grandTotal-exactTotal)*100)/100;
+
+    xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
+    xml+='     <VOUCHER VCHTYPE="Sales" ACTION="Create" OBJVIEW="Invoice Voucher View">\n';
+
+    // ── Voucher Header ──
+    xml+='      <OLDAUDITENTRYIDS.LIST TYPE="Number">\n       <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n      </OLDAUDITENTRYIDS.LIST>\n';
+    xml+='      <DATE>'+vDate+'</DATE>\n';
+    xml+='      <VCHSTATUSDATE>'+vDate+'</VCHSTATUSDATE>\n';
+    xml+='      <GUID>'+guid+'</GUID>\n';
+    xml+='      <GSTREGISTRATIONTYPE>'+_escXml(partyRegType)+'</GSTREGISTRATIONTYPE>\n';
+    xml+='      <VATDEALERTYPE>Regular</VATDEALERTYPE>\n';
+    xml+='      <STATENAME>'+_escXml(partyState)+'</STATENAME>\n';
+    xml+='      <NARRATION>'+_escXml(v.customer+(v.phone?' '+v.phone:'')+(v.notes?' '+v.notes:''))+'</NARRATION>\n';
+    xml+='      <COUNTRYOFRESIDENCE>India</COUNTRYOFRESIDENCE>\n';
+    xml+='      <PLACEOFSUPPLY>'+_escXml(partyState)+'</PLACEOFSUPPLY>\n';
+    xml+='      <VOUCHERTYPENAME>Sales</VOUCHERTYPENAME>\n';
+    xml+='      <PARTYNAME>'+_escXml(partyName)+'</PARTYNAME>\n';
+    xml+='      <GSTREGISTRATION TAXTYPE="GST" TAXREGISTRATION="'+_escXml(TALLY_CMP.gstin)+'">'+_escXml(TALLY_CMP.regName)+'</GSTREGISTRATION>\n';
+    xml+='      <CMPGSTIN>'+_escXml(TALLY_CMP.gstin)+'</CMPGSTIN>\n';
+    xml+='      <PARTYLEDGERNAME>'+_escXml(partyName)+'</PARTYLEDGERNAME>\n';
+    xml+='      <VOUCHERNUMBER>'+_escXml(v.no)+'</VOUCHERNUMBER>\n';
+    xml+='      <BASICBUYERNAME>'+_escXml(partyName)+'</BASICBUYERNAME>\n';
+    xml+='      <CMPGSTREGISTRATIONTYPE>Regular</CMPGSTREGISTRATIONTYPE>\n';
+    xml+='      <PARTYMAILINGNAME>'+_escXml(partyName)+'</PARTYMAILINGNAME>\n';
+    xml+='      <CONSIGNEEMAILINGNAME>'+_escXml(partyName)+'</CONSIGNEEMAILINGNAME>\n';
+    xml+='      <CONSIGNEESTATENAME>'+_escXml(partyState)+'</CONSIGNEESTATENAME>\n';
+    xml+='      <CMPGSTSTATE>'+_escXml(TALLY_CMP.state)+'</CMPGSTSTATE>\n';
+    xml+='      <CONSIGNEECOUNTRYNAME>India</CONSIGNEECOUNTRYNAME>\n';
+    xml+='      <BASICBASEPARTYNAME>'+_escXml(partyName)+'</BASICBASEPARTYNAME>\n';
+    if(partyGstin) xml+='      <PARTYGSTREGISTRATIONTYPE>Regular</PARTYGSTREGISTRATIONTYPE>\n      <PARTYLEDGERGSTIN>'+_escXml(partyGstin)+'</PARTYLEDGERGSTIN>\n';
+    xml+='      <NUMBERINGSTYLE>Auto Retain</NUMBERINGSTYLE>\n';
+    xml+='      <CSTFORMISSUETYPE>'+_na()+'</CSTFORMISSUETYPE>\n';
+    xml+='      <CSTFORMRECVTYPE>'+_na()+'</CSTFORMRECVTYPE>\n';
+    xml+='      <FBTPAYMENTTYPE>Default</FBTPAYMENTTYPE>\n';
+    xml+='      <PERSISTEDVIEW>Invoice Voucher View</PERSISTEDVIEW>\n';
+    xml+='      <VCHSTATUSTAXADJUSTMENT>Default</VCHSTATUSTAXADJUSTMENT>\n';
+    xml+='      <VCHSTATUSVOUCHERTYPE>Sales</VCHSTATUSVOUCHERTYPE>\n';
+    xml+='      <VCHSTATUSTAXUNIT>'+_escXml(TALLY_CMP.regName)+'</VCHSTATUSTAXUNIT>\n';
+    xml+='      <BASICDUEDATEOFPYMT>CASH</BASICDUEDATEOFPYMT>\n';
+    xml+='      <VCHGSTCLASS>'+_na()+'</VCHGSTCLASS>\n';
+    xml+='      <VCHENTRYMODE>Item Invoice</VCHENTRYMODE>\n';
+
+    // ── Boolean flags (required by Tally) ──
+    const noFlags=['DIFFACTUALQTY','ISMSTFROMSYNC','ISDELETED','ISSECURITYONWHENENTERED','ASORIGINAL','AUDITED','ISCOMMONPARTY','FORJOBCOSTING','ISOPTIONAL'];
+    noFlags.forEach(f=>xml+='      <'+f+'>No</'+f+'>\n');
+    xml+='      <EFFECTIVEDATE>'+vDate+'</EFFECTIVEDATE>\n';
+    const noFlags2=['USEFOREXCISE','ISFORJOBWORKIN','ALLOWCONSUMPTION','USEFORINTEREST','USEFORGAINLOSS','USEFORGODOWNTRANSFER','USEFORCOMPOUND','USEFORSERVICETAX','ISREVERSECHARGEAPPLICABLE','ISSYSTEM','ISFETCHEDONLY','ISGSTOVERRIDDEN','ISCANCELLED','ISONHOLD','ISSUMMARY','ISECOMMERCESUPPLY','ISBOENOTAPPLICABLE','ISGSTSECSEVENAPPLICABLE','IGNOREEINVVALIDATION','CMPGSTISOTHTERRITORYASSESSEE','PARTYGSTISOTHTERRITORYASSESSEE','IRNJSONEXPORTED','IRNCANCELLED','IGNOREGSTCONFLICTINMIG','ISOPBALTRANSACTION','IGNOREGSTFORMATVALIDATION'];
+    noFlags2.forEach(f=>xml+='      <'+f+'>No</'+f+'>\n');
+    xml+='      <ISELIGIBLEFORITC>Yes</ISELIGIBLEFORITC>\n';
+    const noFlags3=['IGNOREGSTOPTIONALUNCERTAIN','UPDATESUMMARYVALUES','ISEWAYBILLAPPLICABLE','ISDELETEDRETAINED','ISNULL','ISEXCISEVOUCHER','EXCISETAXOVERRIDE','USEFORTAXUNITTRANSFER','IGNOREPOSVALIDATION','EXCISEOPENING','USEFORFINALPRODUCTION','ISTDSOVERRIDDEN','ISTCSOVERRIDDEN','ISTDSTCSCASHVCH','INCLUDEADVPYMTVCH','ISSUBWORKSCONTRACT','ISVATOVERRIDDEN','IGNOREORIGVCHDATE','ISVATPAIDATCUSTOMS','ISDECLAREDTOCUSTOMS','VATADVANCEPAYMENT','VATADVPAY'];
+    noFlags3.forEach(f=>xml+='      <'+f+'>No</'+f+'>\n');
+    xml+='      <ISVATDUTYPAID>Yes</ISVATDUTYPAID>\n';
+    const noFlags4=['ISDELIVERYSAMEASCONSIGNEE','ISDISPATCHSAMEASCONSIGNOR','ISDELETEDVCHRETAINED','CHANGEVCHMODE','RESETIRNQRCODE'];
+    noFlags4.forEach(f=>xml+='      <'+f+'>No</'+f+'>\n');
+    xml+='      <VCHGSTSTATUSISINCLUDED>Yes</VCHGSTSTATUSISINCLUDED>\n';
+    xml+='      <VCHGSTSTATUSISAPPLICABLE>Yes</VCHGSTSTATUSISAPPLICABLE>\n';
+    xml+='      <ISINVOICE>Yes</ISINVOICE>\n';
+    xml+='      <MFGJOURNAL>No</MFGJOURNAL>\n';
+    xml+='      <HASDISCOUNTS>No</HASDISCOUNTS>\n';
+
+    // ── Empty list stubs ──
+    xml+=_emptyLists(['EWAYBILLDETAILS.LIST','EXCLUDEDTAXATIONS.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','DUTYHEADDETAILS.LIST','GSTADVADJDETAILS.LIST']);
+
+    // ── INVENTORY ENTRIES (one per line item) ──
     v.items.forEach(it=>{
-      xml+='<ALLINVENTORYENTRIES.LIST>\n';
-      xml+=`<STOCKITEMNAME>${escXml(it.name)}</STOCKITEMNAME>\n`;
-      xml+=`<ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n`;
-      xml+=`<RATE>${it.rate.toFixed(2)}/${escXml(it.unit)}</RATE>\n`;
-      xml+=`<AMOUNT>${it.amount.toFixed(2)}</AMOUNT>\n`;
-      xml+=`<ACTUALQTY>${it.qty} ${escXml(it.unit)}</ACTUALQTY>\n`;
-      xml+=`<BILLEDQTY>${it.qty} ${escXml(it.unit)}</BILLEDQTY>\n`;
-      xml+='<ACCOUNTINGALLOCATIONS.LIST>\n';
-      xml+=`<LEDGERNAME>App Sales</LEDGERNAME>\n`;
-      xml+=`<AMOUNT>${it.amount.toFixed(2)}</AMOUNT>\n`;
-      xml+='</ACCOUNTINGALLOCATIONS.LIST>\n';
-      if(it.hsn){
-        xml+='<BATCHALLOCATIONS.LIST>\n';
-        xml+=`<HSNCODE>${escXml(it.hsn)}</HSNCODE>\n`;
-        xml+='</BATCHALLOCATIONS.LIST>\n';
-      }
-      xml+='</ALLINVENTORYENTRIES.LIST>\n';
+      const si=it.stockId?stockItems.find(s=>s.id===it.stockId):stockItems.find(s=>s.name===it.name);
+      const itemGstRate=si&&si.gstRate?parseFloat(si.gstRate):gstRate;
+      const itemHalfRate=itemGstRate/2;
+      const itemHsn=it.hsn||(si?si.hsn:'')||'';
+      const unit=it.unit||'Nos';
+      const unitLower=unit.toLowerCase();
+      // Rate is exclusive (from inclusive: rate / (1 + gstRate/100))
+      const inclRate=it.rate;
+      const exclRate=Math.round(inclRate/(1+itemGstRate/100)*100)/100;
+      const exclAmount=Math.round(exclRate*it.qty*100)/100;
+
+      xml+='      <ALLINVENTORYENTRIES.LIST>\n';
+      xml+='       <STOCKITEMNAME>'+_escXml(it.name)+'</STOCKITEMNAME>\n';
+      xml+='       <GSTOVRDNISREVCHARGEAPPL>'+_na()+'</GSTOVRDNISREVCHARGEAPPL>\n';
+      xml+='       <GSTOVRDNTAXABILITY>Taxable</GSTOVRDNTAXABILITY>\n';
+      xml+='       <GSTSOURCETYPE>Ledger</GSTSOURCETYPE>\n';
+      xml+='       <GSTLEDGERSOURCE>'+_escXml(TALLY_CMP.salesLedger)+'</GSTLEDGERSOURCE>\n';
+      xml+='       <HSNSOURCETYPE>Ledger</HSNSOURCETYPE>\n';
+      xml+='       <HSNLEDGERSOURCE>'+_escXml(TALLY_CMP.salesLedger)+'</HSNLEDGERSOURCE>\n';
+      xml+='       <GSTOVRDNSTOREDNATURE>'+(isInterState?'Interstate Sales - Taxable':'Local Sales - Taxable')+'</GSTOVRDNSTOREDNATURE>\n';
+      xml+='       <GSTOVRDNTYPEOFSUPPLY>Goods</GSTOVRDNTYPEOFSUPPLY>\n';
+      xml+='       <GSTRATEINFERAPPLICABILITY>As per Masters/Company</GSTRATEINFERAPPLICABILITY>\n';
+      if(itemHsn) xml+='       <GSTHSNNAME>'+_escXml(itemHsn)+'</GSTHSNNAME>\n';
+      xml+='       <GSTHSNINFERAPPLICABILITY>As per Masters/Company</GSTHSNINFERAPPLICABILITY>\n';
+      xml+='       <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n';
+      xml+='       <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+      xml+='       <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+      xml+='       <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+      xml+='       <ISLASTDEEMEDPOSITIVE>No</ISLASTDEEMEDPOSITIVE>\n';
+      xml+='       <ISAUTONEGATE>No</ISAUTONEGATE>\n';
+      xml+='       <ISCUSTOMSCLEARANCE>No</ISCUSTOMSCLEARANCE>\n';
+      xml+='       <ISTRACKCOMPONENT>No</ISTRACKCOMPONENT>\n';
+      xml+='       <ISTRACKPRODUCTION>No</ISTRACKPRODUCTION>\n';
+      xml+='       <ISPRIMARYITEM>No</ISPRIMARYITEM>\n';
+      xml+='       <ISSCRAP>No</ISSCRAP>\n';
+      xml+='       <RATE>'+_fmtRate(exclRate,unitLower)+'</RATE>\n';
+      xml+='       <AMOUNT>'+exclAmount.toFixed(2)+'</AMOUNT>\n';
+      xml+='       <ACTUALQTY>'+_fmtQty(it.qty,unitLower)+'</ACTUALQTY>\n';
+      xml+='       <BILLEDQTY>'+_fmtQty(it.qty,unitLower)+'</BILLEDQTY>\n';
+      xml+='       <INCLVATRATE>'+_fmtRate(inclRate,unitLower)+'</INCLVATRATE>\n';
+
+      // Batch allocations
+      xml+='       <BATCHALLOCATIONS.LIST>\n';
+      xml+='        <GODOWNNAME>Main Location</GODOWNNAME>\n';
+      xml+='        <BATCHNAME>Primary Batch</BATCHNAME>\n';
+      xml+='        <INDENTNO>'+_na()+'</INDENTNO>\n';
+      xml+='        <ORDERNO>'+_na()+'</ORDERNO>\n';
+      xml+='        <TRACKINGNUMBER>'+_na()+'</TRACKINGNUMBER>\n';
+      xml+='        <DYNAMICCSTISCLEARED>No</DYNAMICCSTISCLEARED>\n';
+      xml+='        <AMOUNT>'+exclAmount.toFixed(2)+'</AMOUNT>\n';
+      xml+='        <ACTUALQTY>'+_fmtQty(it.qty,unitLower)+'</ACTUALQTY>\n';
+      xml+='        <BILLEDQTY>'+_fmtQty(it.qty,unitLower)+'</BILLEDQTY>\n';
+      xml+='        <ADDITIONALDETAILS.LIST>        </ADDITIONALDETAILS.LIST>\n';
+      xml+='        <VOUCHERCOMPONENTLIST.LIST>        </VOUCHERCOMPONENTLIST.LIST>\n';
+      xml+='       </BATCHALLOCATIONS.LIST>\n';
+
+      // Accounting allocations (sales ledger)
+      xml+='       <ACCOUNTINGALLOCATIONS.LIST>\n';
+      xml+='        <OLDAUDITENTRYIDS.LIST TYPE="Number">\n         <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n        </OLDAUDITENTRYIDS.LIST>\n';
+      xml+='        <LEDGERNAME>'+_escXml(TALLY_CMP.salesLedger)+'</LEDGERNAME>\n';
+      xml+='        <GSTCLASS>'+_na()+'</GSTCLASS>\n';
+      xml+='        <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n';
+      xml+='        <LEDGERFROMITEM>No</LEDGERFROMITEM>\n';
+      xml+='        <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>\n';
+      xml+='        <ISPARTYLEDGER>No</ISPARTYLEDGER>\n';
+      xml+='        <GSTOVERRIDDEN>No</GSTOVERRIDDEN>\n';
+      xml+='        <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+      xml+='        <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+      xml+='        <STRDGSTISPARTYLEDGER>No</STRDGSTISPARTYLEDGER>\n';
+      xml+='        <STRDGSTISDUTYLEDGER>No</STRDGSTISDUTYLEDGER>\n';
+      xml+='        <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+      xml+='        <ISLASTDEEMEDPOSITIVE>No</ISLASTDEEMEDPOSITIVE>\n';
+      xml+='        <ISCAPVATTAXALTERED>No</ISCAPVATTAXALTERED>\n';
+      xml+='        <ISCAPVATNOTCLAIMED>No</ISCAPVATNOTCLAIMED>\n';
+      xml+='        <AMOUNT>'+exclAmount.toFixed(2)+'</AMOUNT>\n';
+      xml+=_emptyLists(['SERVICETAXDETAILS.LIST','BANKALLOCATIONS.LIST','BILLALLOCATIONS.LIST','INTERESTCOLLECTION.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','INPUTCRALLOCS.LIST','DUTYHEADDETAILS.LIST','EXCISEDUTYHEADDETAILS.LIST','RATEDETAILS.LIST','SUMMARYALLOCS.LIST','CENVATDUTYALLOCATIONS.LIST','STPYMTDETAILS.LIST','EXCISEPAYMENTALLOCATIONS.LIST','TAXBILLALLOCATIONS.LIST','TAXOBJECTALLOCATIONS.LIST','TDSEXPENSEALLOCATIONS.LIST','VATSTATUTORYDETAILS.LIST','COSTTRACKALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','INVOICEWISEDETAILS.LIST','VATITCDETAILS.LIST','ADVANCETAXDETAILS.LIST','TAXTYPEALLOCATIONS.LIST']);
+      xml+='       </ACCOUNTINGALLOCATIONS.LIST>\n';
+
+      // GST Rate Details (per inventory item)
+      xml+='       <DUTYHEADDETAILS.LIST>       </DUTYHEADDETAILS.LIST>\n';
+      // CGST rate
+      xml+='       <RATEDETAILS.LIST>\n';
+      xml+='        <GSTRATEDUTYHEAD>CGST</GSTRATEDUTYHEAD>\n';
+      xml+='        <GSTRATEVALUATIONTYPE>Based on Value</GSTRATEVALUATIONTYPE>\n';
+      xml+='        <GSTRATE> '+itemHalfRate.toFixed(2)+'</GSTRATE>\n';
+      xml+='       </RATEDETAILS.LIST>\n';
+      // SGST rate
+      xml+='       <RATEDETAILS.LIST>\n';
+      xml+='        <GSTRATEDUTYHEAD>SGST/UTGST</GSTRATEDUTYHEAD>\n';
+      xml+='        <GSTRATEVALUATIONTYPE>Based on Value</GSTRATEVALUATIONTYPE>\n';
+      xml+='        <GSTRATE> '+itemHalfRate.toFixed(2)+'</GSTRATE>\n';
+      xml+='       </RATEDETAILS.LIST>\n';
+      // IGST rate
+      xml+='       <RATEDETAILS.LIST>\n';
+      xml+='        <GSTRATEDUTYHEAD>IGST</GSTRATEDUTYHEAD>\n';
+      xml+='        <GSTRATEVALUATIONTYPE>Based on Value</GSTRATEVALUATIONTYPE>\n';
+      xml+='        <GSTRATE> '+itemGstRate+'</GSTRATE>\n';
+      xml+='       </RATEDETAILS.LIST>\n';
+      // Cess (not applicable)
+      xml+='       <RATEDETAILS.LIST>\n        <GSTRATEDUTYHEAD>Cess</GSTRATEDUTYHEAD>\n        <GSTRATEVALUATIONTYPE>'+_na()+'</GSTRATEVALUATIONTYPE>\n       </RATEDETAILS.LIST>\n';
+      xml+='       <RATEDETAILS.LIST>\n        <GSTRATEDUTYHEAD>State Cess</GSTRATEDUTYHEAD>\n        <GSTRATEVALUATIONTYPE>Based on Value</GSTRATEVALUATIONTYPE>\n       </RATEDETAILS.LIST>\n';
+      xml+=_emptyLists(['SUPPLEMENTARYDUTYHEADDETAILS.LIST','TAXOBJECTALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','EXCISEALLOCATIONS.LIST','EXPENSEALLOCATIONS.LIST']);
+      xml+='      </ALLINVENTORYENTRIES.LIST>\n';
     });
-    // GST details for compliance
-    if(v.gstType!=='none'&&v.gstRate>0){
-      xml+='<LEDGERENTRIES.LIST>\n';
-      xml+=`<GSTCLASS>GST</GSTCLASS>\n`;
-      if(vendor&&vendor.gstin) xml+=`<PARTYGSTIN>${escXml(vendor.gstin)}</PARTYGSTIN>\n`;
-      xml+=`<GSTTAXRATE>${v.gstRate}</GSTTAXRATE>\n`;
-      xml+='</LEDGERENTRIES.LIST>\n';
+
+    // ── Empty list stubs between inventory and ledger entries ──
+    xml+=_emptyLists(['CONTRITRANS.LIST','EWAYBILLERRORLIST.LIST','IRNERRORLIST.LIST','HARYANAVAT.LIST','SUPPLEMENTARYDUTYHEADDETAILS.LIST','INVOICEDELNOTES.LIST','INVOICEORDERLIST.LIST','INVOICEINDENTLIST.LIST','ATTENDANCEENTRIES.LIST','ORIGINVOICEDETAILS.LIST','INVOICEEXPORTLIST.LIST']);
+
+    // ── LEDGER ENTRIES ──
+
+    // 1. Party ledger (Debit - negative amount)
+    xml+='      <LEDGERENTRIES.LIST>\n';
+    xml+='       <OLDAUDITENTRYIDS.LIST TYPE="Number">\n        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n       </OLDAUDITENTRYIDS.LIST>\n';
+    xml+='       <LEDGERNAME>'+_escXml(partyName)+'</LEDGERNAME>\n';
+    xml+='       <GSTCLASS>'+_na()+'</GSTCLASS>\n';
+    xml+='       <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>\n';
+    xml+='       <LEDGERFROMITEM>No</LEDGERFROMITEM>\n';
+    xml+='       <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>\n';
+    xml+='       <ISPARTYLEDGER>Yes</ISPARTYLEDGER>\n';
+    xml+='       <GSTOVERRIDDEN>No</GSTOVERRIDDEN>\n';
+    xml+='       <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+    xml+='       <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+    xml+='       <STRDGSTISPARTYLEDGER>No</STRDGSTISPARTYLEDGER>\n';
+    xml+='       <STRDGSTISDUTYLEDGER>No</STRDGSTISDUTYLEDGER>\n';
+    xml+='       <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+    xml+='       <ISLASTDEEMEDPOSITIVE>Yes</ISLASTDEEMEDPOSITIVE>\n';
+    xml+='       <ISCAPVATTAXALTERED>No</ISCAPVATTAXALTERED>\n';
+    xml+='       <ISCAPVATNOTCLAIMED>No</ISCAPVATNOTCLAIMED>\n';
+    xml+='       <AMOUNT>-'+grandTotal.toFixed(2)+'</AMOUNT>\n';
+    xml+=_emptyLists(['SERVICETAXDETAILS.LIST','BANKALLOCATIONS.LIST','BILLALLOCATIONS.LIST','INTERESTCOLLECTION.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','INPUTCRALLOCS.LIST','DUTYHEADDETAILS.LIST','EXCISEDUTYHEADDETAILS.LIST','RATEDETAILS.LIST','SUMMARYALLOCS.LIST','CENVATDUTYALLOCATIONS.LIST','STPYMTDETAILS.LIST','EXCISEPAYMENTALLOCATIONS.LIST','TAXBILLALLOCATIONS.LIST','TAXOBJECTALLOCATIONS.LIST','TDSEXPENSEALLOCATIONS.LIST','VATSTATUTORYDETAILS.LIST','COSTTRACKALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','INVOICEWISEDETAILS.LIST','VATITCDETAILS.LIST','ADVANCETAXDETAILS.LIST','TAXTYPEALLOCATIONS.LIST']);
+    xml+='      </LEDGERENTRIES.LIST>\n';
+
+    // 2. CGST ledger entry (if intra-state)
+    if(v.gstType==='gst'&&cgstAmt>0){
+      xml+='      <LEDGERENTRIES.LIST>\n';
+      xml+='       <OLDAUDITENTRYIDS.LIST TYPE="Number">\n        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n       </OLDAUDITENTRYIDS.LIST>\n';
+      xml+='       <RATEOFINVOICETAX.LIST TYPE="Number">\n        <RATEOFINVOICETAX> '+halfRate.toFixed(2)+'</RATEOFINVOICETAX>\n       </RATEOFINVOICETAX.LIST>\n';
+      xml+='       <APPROPRIATEFOR>'+_na()+'</APPROPRIATEFOR>\n';
+      xml+='       <ROUNDTYPE>'+_na()+'</ROUNDTYPE>\n';
+      xml+='       <LEDGERNAME>Output CGST '+halfRate+'%</LEDGERNAME>\n';
+      xml+='       <GSTCLASS>'+_na()+'</GSTCLASS>\n';
+      xml+='       <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n';
+      xml+='       <LEDGERFROMITEM>No</LEDGERFROMITEM>\n';
+      xml+='       <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>\n';
+      xml+='       <ISPARTYLEDGER>No</ISPARTYLEDGER>\n';
+      xml+='       <GSTOVERRIDDEN>No</GSTOVERRIDDEN>\n';
+      xml+='       <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+      xml+='       <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+      xml+='       <STRDGSTISPARTYLEDGER>No</STRDGSTISPARTYLEDGER>\n';
+      xml+='       <STRDGSTISDUTYLEDGER>No</STRDGSTISDUTYLEDGER>\n';
+      xml+='       <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+      xml+='       <ISLASTDEEMEDPOSITIVE>No</ISLASTDEEMEDPOSITIVE>\n';
+      xml+='       <ISCAPVATTAXALTERED>No</ISCAPVATTAXALTERED>\n';
+      xml+='       <ISCAPVATNOTCLAIMED>No</ISCAPVATNOTCLAIMED>\n';
+      xml+='       <AMOUNT>'+cgstAmt.toFixed(2)+'</AMOUNT>\n';
+      xml+='       <VATEXPAMOUNT>'+cgstAmt.toFixed(2)+'</VATEXPAMOUNT>\n';
+      xml+=_emptyLists(['SERVICETAXDETAILS.LIST','BANKALLOCATIONS.LIST','BILLALLOCATIONS.LIST','INTERESTCOLLECTION.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','INPUTCRALLOCS.LIST','DUTYHEADDETAILS.LIST','EXCISEDUTYHEADDETAILS.LIST','RATEDETAILS.LIST','SUMMARYALLOCS.LIST','CENVATDUTYALLOCATIONS.LIST','STPYMTDETAILS.LIST','EXCISEPAYMENTALLOCATIONS.LIST','TAXBILLALLOCATIONS.LIST','TAXOBJECTALLOCATIONS.LIST','TDSEXPENSEALLOCATIONS.LIST','VATSTATUTORYDETAILS.LIST','COSTTRACKALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','INVOICEWISEDETAILS.LIST','VATITCDETAILS.LIST','ADVANCETAXDETAILS.LIST','TAXTYPEALLOCATIONS.LIST']);
+      xml+='      </LEDGERENTRIES.LIST>\n';
+
+      // 3. SGST ledger entry
+      xml+='      <LEDGERENTRIES.LIST>\n';
+      xml+='       <OLDAUDITENTRYIDS.LIST TYPE="Number">\n        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n       </OLDAUDITENTRYIDS.LIST>\n';
+      xml+='       <RATEOFINVOICETAX.LIST TYPE="Number">\n        <RATEOFINVOICETAX> '+halfRate.toFixed(2)+'</RATEOFINVOICETAX>\n       </RATEOFINVOICETAX.LIST>\n';
+      xml+='       <APPROPRIATEFOR>'+_na()+'</APPROPRIATEFOR>\n';
+      xml+='       <ROUNDTYPE>'+_na()+'</ROUNDTYPE>\n';
+      xml+='       <LEDGERNAME>Output SGST '+halfRate+'%</LEDGERNAME>\n';
+      xml+='       <GSTCLASS>'+_na()+'</GSTCLASS>\n';
+      xml+='       <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n';
+      xml+='       <LEDGERFROMITEM>No</LEDGERFROMITEM>\n';
+      xml+='       <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>\n';
+      xml+='       <ISPARTYLEDGER>No</ISPARTYLEDGER>\n';
+      xml+='       <GSTOVERRIDDEN>No</GSTOVERRIDDEN>\n';
+      xml+='       <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+      xml+='       <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+      xml+='       <STRDGSTISPARTYLEDGER>No</STRDGSTISPARTYLEDGER>\n';
+      xml+='       <STRDGSTISDUTYLEDGER>No</STRDGSTISDUTYLEDGER>\n';
+      xml+='       <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+      xml+='       <ISLASTDEEMEDPOSITIVE>No</ISLASTDEEMEDPOSITIVE>\n';
+      xml+='       <ISCAPVATTAXALTERED>No</ISCAPVATTAXALTERED>\n';
+      xml+='       <ISCAPVATNOTCLAIMED>No</ISCAPVATNOTCLAIMED>\n';
+      xml+='       <AMOUNT>'+sgstAmt.toFixed(2)+'</AMOUNT>\n';
+      xml+='       <VATEXPAMOUNT>'+sgstAmt.toFixed(2)+'</VATEXPAMOUNT>\n';
+      xml+=_emptyLists(['SERVICETAXDETAILS.LIST','BANKALLOCATIONS.LIST','BILLALLOCATIONS.LIST','INTERESTCOLLECTION.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','INPUTCRALLOCS.LIST','DUTYHEADDETAILS.LIST','EXCISEDUTYHEADDETAILS.LIST','RATEDETAILS.LIST','SUMMARYALLOCS.LIST','CENVATDUTYALLOCATIONS.LIST','STPYMTDETAILS.LIST','EXCISEPAYMENTALLOCATIONS.LIST','TAXBILLALLOCATIONS.LIST','TAXOBJECTALLOCATIONS.LIST','TDSEXPENSEALLOCATIONS.LIST','VATSTATUTORYDETAILS.LIST','COSTTRACKALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','INVOICEWISEDETAILS.LIST','VATITCDETAILS.LIST','ADVANCETAXDETAILS.LIST','TAXTYPEALLOCATIONS.LIST']);
+      xml+='      </LEDGERENTRIES.LIST>\n';
     }
-    xml+='</VOUCHER>\n';
-    xml+='</TALLYMESSAGE>\n';
+
+    // 4. IGST ledger entry (if inter-state)
+    if(v.gstType==='igst'&&igstAmt>0){
+      xml+='      <LEDGERENTRIES.LIST>\n';
+      xml+='       <OLDAUDITENTRYIDS.LIST TYPE="Number">\n        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n       </OLDAUDITENTRYIDS.LIST>\n';
+      xml+='       <RATEOFINVOICETAX.LIST TYPE="Number">\n        <RATEOFINVOICETAX> '+gstRate.toFixed(2)+'</RATEOFINVOICETAX>\n       </RATEOFINVOICETAX.LIST>\n';
+      xml+='       <APPROPRIATEFOR>'+_na()+'</APPROPRIATEFOR>\n';
+      xml+='       <ROUNDTYPE>'+_na()+'</ROUNDTYPE>\n';
+      xml+='       <LEDGERNAME>Output IGST '+gstRate+'%</LEDGERNAME>\n';
+      xml+='       <GSTCLASS>'+_na()+'</GSTCLASS>\n';
+      xml+='       <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n';
+      xml+='       <LEDGERFROMITEM>No</LEDGERFROMITEM>\n';
+      xml+='       <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>\n';
+      xml+='       <ISPARTYLEDGER>No</ISPARTYLEDGER>\n';
+      xml+='       <GSTOVERRIDDEN>No</GSTOVERRIDDEN>\n';
+      xml+='       <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+      xml+='       <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+      xml+='       <STRDGSTISPARTYLEDGER>No</STRDGSTISPARTYLEDGER>\n';
+      xml+='       <STRDGSTISDUTYLEDGER>No</STRDGSTISDUTYLEDGER>\n';
+      xml+='       <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+      xml+='       <ISLASTDEEMEDPOSITIVE>No</ISLASTDEEMEDPOSITIVE>\n';
+      xml+='       <ISCAPVATTAXALTERED>No</ISCAPVATTAXALTERED>\n';
+      xml+='       <ISCAPVATNOTCLAIMED>No</ISCAPVATNOTCLAIMED>\n';
+      xml+='       <AMOUNT>'+igstAmt.toFixed(2)+'</AMOUNT>\n';
+      xml+='       <VATEXPAMOUNT>'+igstAmt.toFixed(2)+'</VATEXPAMOUNT>\n';
+      xml+=_emptyLists(['SERVICETAXDETAILS.LIST','BANKALLOCATIONS.LIST','BILLALLOCATIONS.LIST','INTERESTCOLLECTION.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','INPUTCRALLOCS.LIST','DUTYHEADDETAILS.LIST','EXCISEDUTYHEADDETAILS.LIST','RATEDETAILS.LIST','SUMMARYALLOCS.LIST','CENVATDUTYALLOCATIONS.LIST','STPYMTDETAILS.LIST','EXCISEPAYMENTALLOCATIONS.LIST','TAXBILLALLOCATIONS.LIST','TAXOBJECTALLOCATIONS.LIST','TDSEXPENSEALLOCATIONS.LIST','VATSTATUTORYDETAILS.LIST','COSTTRACKALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','INVOICEWISEDETAILS.LIST','VATITCDETAILS.LIST','ADVANCETAXDETAILS.LIST','TAXTYPEALLOCATIONS.LIST']);
+      xml+='      </LEDGERENTRIES.LIST>\n';
+    }
+
+    // 5. Round Off ledger entry (if any)
+    if(Math.abs(roundOff)>=0.01){
+      xml+='      <LEDGERENTRIES.LIST>\n';
+      xml+='       <OLDAUDITENTRYIDS.LIST TYPE="Number">\n        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>\n       </OLDAUDITENTRYIDS.LIST>\n';
+      xml+='       <ROUNDTYPE>Normal Rounding</ROUNDTYPE>\n';
+      xml+='       <LEDGERNAME>Round Off</LEDGERNAME>\n';
+      xml+='       <GSTCLASS>'+_na()+'</GSTCLASS>\n';
+      xml+='       <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>\n';
+      xml+='       <LEDGERFROMITEM>No</LEDGERFROMITEM>\n';
+      xml+='       <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>\n';
+      xml+='       <ISPARTYLEDGER>No</ISPARTYLEDGER>\n';
+      xml+='       <GSTOVERRIDDEN>No</GSTOVERRIDDEN>\n';
+      xml+='       <ISGSTASSESSABLEVALUEOVERRIDDEN>No</ISGSTASSESSABLEVALUEOVERRIDDEN>\n';
+      xml+='       <STRDISGSTAPPLICABLE>No</STRDISGSTAPPLICABLE>\n';
+      xml+='       <STRDGSTISPARTYLEDGER>No</STRDGSTISPARTYLEDGER>\n';
+      xml+='       <STRDGSTISDUTYLEDGER>No</STRDGSTISDUTYLEDGER>\n';
+      xml+='       <CONTENTNEGISPOS>No</CONTENTNEGISPOS>\n';
+      xml+='       <ISLASTDEEMEDPOSITIVE>No</ISLASTDEEMEDPOSITIVE>\n';
+      xml+='       <ISCAPVATTAXALTERED>No</ISCAPVATTAXALTERED>\n';
+      xml+='       <ISCAPVATNOTCLAIMED>No</ISCAPVATNOTCLAIMED>\n';
+      xml+='       <ROUNDLIMIT> 1</ROUNDLIMIT>\n';
+      xml+='       <AMOUNT>'+roundOff.toFixed(2)+'</AMOUNT>\n';
+      xml+='       <VATEXPAMOUNT>'+roundOff.toFixed(2)+'</VATEXPAMOUNT>\n';
+      xml+=_emptyLists(['SERVICETAXDETAILS.LIST','BANKALLOCATIONS.LIST','BILLALLOCATIONS.LIST','INTERESTCOLLECTION.LIST','OLDAUDITENTRIES.LIST','ACCOUNTAUDITENTRIES.LIST','AUDITENTRIES.LIST','INPUTCRALLOCS.LIST','DUTYHEADDETAILS.LIST','EXCISEDUTYHEADDETAILS.LIST','RATEDETAILS.LIST','SUMMARYALLOCS.LIST','CENVATDUTYALLOCATIONS.LIST','STPYMTDETAILS.LIST','EXCISEPAYMENTALLOCATIONS.LIST','TAXBILLALLOCATIONS.LIST','TAXOBJECTALLOCATIONS.LIST','TDSEXPENSEALLOCATIONS.LIST','VATSTATUTORYDETAILS.LIST','COSTTRACKALLOCATIONS.LIST','REFVOUCHERDETAILS.LIST','INVOICEWISEDETAILS.LIST','VATITCDETAILS.LIST','ADVANCETAXDETAILS.LIST','TAXTYPEALLOCATIONS.LIST']);
+      xml+='      </LEDGERENTRIES.LIST>\n';
+    }
+
+    // ── GST.LIST ──
+    xml+='      <GST.LIST>\n       <PURPOSETYPE>GST</PURPOSETYPE>\n       <STAT.LIST>\n        <PURPOSETYPE>GST</PURPOSETYPE>\n        <STATKEY>'+_na()+'</STATKEY>\n        <ISFETCHEDONLY>No</ISFETCHEDONLY>\n        <ISDELETED>No</ISDELETED>\n        <TALLYCONTENTUSER.LIST>        </TALLYCONTENTUSER.LIST>\n       </STAT.LIST>\n      </GST.LIST>\n';
+
+    // ── Trailing empty lists ──
+    xml+=_emptyLists(['STKJRNLADDLCOSTDETAILS.LIST','PAYROLLMODEOFPAYMENT.LIST','ATTDRECORDS.LIST','GSTEWAYCONSIGNORADDRESS.LIST','GSTEWAYCONSIGNEEADDRESS.LIST','TEMPGSTRATEDETAILS.LIST','TEMPGSTADVADJUSTED.LIST','GSTBUYERADDRESS.LIST','GSTCONSIGNEEADDRESS.LIST']);
+
+    xml+='     </VOUCHER>\n';
+    xml+='    </TALLYMESSAGE>\n';
   });
-  xml+='</REQUESTDATA>\n</IMPORTDATA>\n</BODY>\n</ENVELOPE>';
-  // Download
+
+  xml+='   </REQUESTDATA>\n  </IMPORTDATA>\n </BODY>\n</ENVELOPE>\n';
+
+  // Download as UTF-8 with BOM (Tally prefers this)
   const dateLabel=from&&to?from+'_to_'+to:'all';
-  const blob=new Blob([xml],{type:'application/xml'});
+  const bom='\uFEFF';
+  const blob=new Blob([bom+xml],{type:'application/xml;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='ClearIce_SaleVouchers_'+dateLabel+'.xml';
   a.click();
   URL.revokeObjectURL(a.href);
-}
-function formatTallyDate(dateStr){
-  if(!dateStr) return '';
-  const [y,m,d]=dateStr.split('-');
-  return y+m+d;
-}
-function escXml(s){
-  if(!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  alert('Exported '+list.length+' vouchers in Tally Prime DayBook format.\n\nImport order:\n1. Ledger Masters first\n2. Stock Masters second\n3. Then this voucher file');
 }
 
 // ========== TALLY LEDGER MASTER XML ==========
 function exportLedgerMasterXML(){
-  let xml='<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml+='<ENVELOPE>\n';
-  xml+='<HEADER>\n<TALLYREQUEST>Import Data</TALLYREQUEST>\n</HEADER>\n';
-  xml+='<BODY>\n<IMPORTDATA>\n<REQUESTDESC>\n<REPORTNAME>All Masters</REPORTNAME>\n<STATICVARIABLES>\n<SVCURRENTCOMPANY>Clear Ice Industries</SVCURRENTCOMPANY>\n</STATICVARIABLES>\n</REQUESTDESC>\n<REQUESTDATA>\n';
+  let xml='<ENVELOPE>\n <HEADER>\n  <TALLYREQUEST>Import Data</TALLYREQUEST>\n </HEADER>\n';
+  xml+=' <BODY>\n  <IMPORTDATA>\n   <REQUESTDESC>\n    <REPORTNAME>All Masters</REPORTNAME>\n';
+  xml+='    <STATICVARIABLES>\n     <SVCURRENTCOMPANY>'+_escXml(TALLY_CMP.name)+'</SVCURRENTCOMPANY>\n    </STATICVARIABLES>\n';
+  xml+='   </REQUESTDESC>\n   <REQUESTDATA>\n';
 
   // 1. App Sales ledger
-  xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-  xml+='<LEDGER NAME="App Sales" ACTION="Create">\n';
-  xml+='<NAME>App Sales</NAME>\n';
-  xml+='<PARENT>Sales Accounts</PARENT>\n';
-  xml+='<ISBILLWISEON>No</ISBILLWISEON>\n';
-  xml+='<AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
-  xml+='</LEDGER>\n';
-  xml+='</TALLYMESSAGE>\n';
+  xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="'+_escXml(TALLY_CMP.salesLedger)+'" ACTION="Create">\n';
+  xml+='      <NAME>'+_escXml(TALLY_CMP.salesLedger)+'</NAME>\n      <PARENT>Sales Accounts</PARENT>\n      <ISBILLWISEON>No</ISBILLWISEON>\n      <AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
+  xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
 
-  // 2. GST Duty Ledgers - auto-detect all rates used in vouchers and stock items
+  // 2. GST Duty Ledgers - auto-detect all rates
   const gstRatesUsed=new Set();
-  saleVouchers.forEach(v=>{ if(v.gstRate>0) gstRatesUsed.add(v.gstRate); });
-  stockItems.forEach(item=>{ if(item.gstRate) gstRatesUsed.add(parseFloat(item.gstRate)); });
-  if(!gstRatesUsed.size) gstRatesUsed.add(5); // default 5% if none found
+  saleVouchers.forEach(v=>{if(v.gstRate>0)gstRatesUsed.add(v.gstRate);});
+  stockItems.forEach(item=>{if(item.gstRate)gstRatesUsed.add(parseFloat(item.gstRate));});
+  if(!gstRatesUsed.size) gstRatesUsed.add(5);
   const gstLedgers=[];
   gstRatesUsed.forEach(rate=>{
     const half=rate/2;
@@ -2611,169 +2877,124 @@ function exportLedgerMasterXML(){
     gstLedgers.push({name:'Output IGST '+rate+'%',rate:String(rate),type:'Integrated Tax'});
   });
   gstLedgers.forEach(gl=>{
-    xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-    xml+=`<LEDGER NAME="${gl.name}" ACTION="Create">\n`;
-    xml+=`<NAME>${gl.name}</NAME>\n`;
-    xml+='<PARENT>Duties &amp; Taxes</PARENT>\n';
-    xml+='<TAXTYPE>GST</TAXTYPE>\n';
-    xml+=`<GSTDUTYHEAD>${gl.type}</GSTDUTYHEAD>\n`;
-    xml+='<ISBILLWISEON>No</ISBILLWISEON>\n';
-    xml+='<AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
-    xml+='</LEDGER>\n';
-    xml+='</TALLYMESSAGE>\n';
+    xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="'+_escXml(gl.name)+'" ACTION="Create">\n';
+    xml+='      <NAME>'+_escXml(gl.name)+'</NAME>\n      <PARENT>Duties &amp; Taxes</PARENT>\n      <TAXTYPE>GST</TAXTYPE>\n';
+    xml+='      <GSTDUTYHEAD>'+gl.type+'</GSTDUTYHEAD>\n      <ISBILLWISEON>No</ISBILLWISEON>\n      <AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
+    xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
   });
 
-  // 3. Cash ledger
-  xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-  xml+='<LEDGER NAME="Cash" ACTION="Create">\n';
-  xml+='<NAME>Cash</NAME>\n';
-  xml+='<PARENT>Cash-in-Hand</PARENT>\n';
-  xml+='</LEDGER>\n';
-  xml+='</TALLYMESSAGE>\n';
+  // 3. Cash Sales ledger (party)
+  xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="Cash Sales" ACTION="Create">\n';
+  xml+='      <NAME>Cash Sales</NAME>\n      <PARENT>Sundry Debtors</PARENT>\n      <ISBILLWISEON>Yes</ISBILLWISEON>\n';
+  xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
 
-  // 4. Party / Customer ledgers from all vouchers + vendors
+  // 4. Cash ledger
+  xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="Cash" ACTION="Create">\n';
+  xml+='      <NAME>Cash</NAME>\n      <PARENT>Cash-in-Hand</PARENT>\n';
+  xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
+
+  // 5. Round Off ledger
+  xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="Round Off" ACTION="Create">\n';
+  xml+='      <NAME>Round Off</NAME>\n      <PARENT>Indirect Expenses</PARENT>\n      <ROUNDTYPE>Normal Rounding</ROUNDTYPE>\n';
+  xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
+
+  // 6. All customer/vendor party ledgers
   const partyNames=new Set();
-  saleVouchers.forEach(v=>{ if(v.customer) partyNames.add(v.customer); });
-  vendors.forEach(v=>{ if(v.name) partyNames.add(v.name); });
-
+  saleVouchers.forEach(v=>{if(v.customer)partyNames.add(v.customer);});
+  vendors.forEach(v=>{if(v.name)partyNames.add(v.name);});
   partyNames.forEach(name=>{
     const vendor=vendors.find(v=>v.name===name);
-    xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-    xml+=`<LEDGER NAME="${escXml(name)}" ACTION="Create">\n`;
-    xml+=`<NAME>${escXml(name)}</NAME>\n`;
-    xml+='<PARENT>Sundry Debtors</PARENT>\n';
-    xml+='<ISBILLWISEON>Yes</ISBILLWISEON>\n';
+    xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="'+_escXml(name)+'" ACTION="Create">\n';
+    xml+='      <NAME>'+_escXml(name)+'</NAME>\n      <PARENT>Sundry Debtors</PARENT>\n      <ISBILLWISEON>Yes</ISBILLWISEON>\n';
     if(vendor){
-      if(vendor.address) xml+=`<ADDRESS>${escXml(vendor.address)}${vendor.state?', '+escXml(vendor.state):''}</ADDRESS>\n`;
-      if(vendor.state) xml+=`<LEDSTATENAME>${escXml(vendor.state)}</LEDSTATENAME>\n`;
+      if(vendor.address)xml+='      <ADDRESS>'+_escXml(vendor.address+(vendor.state?', '+vendor.state:''))+'</ADDRESS>\n';
+      if(vendor.state)xml+='      <LEDSTATENAME>'+_escXml(vendor.state)+'</LEDSTATENAME>\n';
       if(vendor.gstin){
-        xml+=`<PARTYGSTIN>${escXml(vendor.gstin)}</PARTYGSTIN>\n`;
-        xml+=`<GSTREGISTRATIONTYPE>${vendor.gstType==='composite'?'Composition':'Regular'}</GSTREGISTRATIONTYPE>\n`;
-      } else if(vendor.gstType==='unregistered'){
-        xml+='<GSTREGISTRATIONTYPE>Unregistered</GSTREGISTRATIONTYPE>\n';
+        xml+='      <PARTYGSTIN>'+_escXml(vendor.gstin)+'</PARTYGSTIN>\n';
+        xml+='      <GSTREGISTRATIONTYPE>'+(vendor.gstType==='composite'?'Composition':'Regular')+'</GSTREGISTRATIONTYPE>\n';
+      }else if(vendor.gstType==='unregistered'){
+        xml+='      <GSTREGISTRATIONTYPE>Unregistered/Consumer</GSTREGISTRATIONTYPE>\n';
       }
-      if(vendor.phone) xml+=`<LEDGERMOBILE>${escXml(vendor.phone)}</LEDGERMOBILE>\n`;
-      if(vendor.email) xml+=`<LEDGEREMAIL>${escXml(vendor.email)}</LEDGEREMAIL>\n`;
+      if(vendor.phone)xml+='      <LEDGERMOBILE>'+_escXml(vendor.phone)+'</LEDGERMOBILE>\n';
+      if(vendor.email)xml+='      <LEDGEREMAIL>'+_escXml(vendor.email)+'</LEDGEREMAIL>\n';
     }
-    xml+='</LEDGER>\n';
-    xml+='</TALLYMESSAGE>\n';
+    xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
   });
 
-  // 5. Company ledger (self)
-  xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-  xml+='<LEDGER NAME="Clear Ice Industries" ACTION="Create">\n';
-  xml+='<NAME>Clear Ice Industries</NAME>\n';
-  xml+='<PARENT>Capital Account</PARENT>\n';
-  xml+='<ADDRESS>BARCHAPARI, PANIKHAITI, KAMRUP METRO - 781026</ADDRESS>\n';
-  xml+='<LEDSTATENAME>Assam</LEDSTATENAME>\n';
-  xml+='<PARTYGSTIN>18AIOPG8152B2Z9</PARTYGSTIN>\n';
-  xml+='<INCOMETAXNUMBER>AIOPG8152B</INCOMETAXNUMBER>\n';
-  xml+='</LEDGER>\n';
-  xml+='</TALLYMESSAGE>\n';
-
-  xml+='</REQUESTDATA>\n</IMPORTDATA>\n</BODY>\n</ENVELOPE>';
-
-  // Download
-  const blob=new Blob([xml],{type:'application/xml'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='ClearIce_LedgerMasters.xml';
-  a.click();
-  URL.revokeObjectURL(a.href);
-
-  const count=3+gstLedgers.length+partyNames.size;
+  xml+='   </REQUESTDATA>\n  </IMPORTDATA>\n </BODY>\n</ENVELOPE>\n';
+  const bom='\uFEFF';
+  const blob=new Blob([bom+xml],{type:'application/xml;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='ClearIce_LedgerMasters.xml';a.click();URL.revokeObjectURL(a.href);
+  const count=4+gstLedgers.length+partyNames.size;
   const gstNames=gstLedgers.map(g=>g.name).join(', ');
-  alert('Ledger Master XML exported!\n\n'+count+' ledgers included:\n- App Sales (Sales Accounts)\n- '+gstNames+' (Duties & Taxes)\n- Cash (Cash-in-Hand)\n- '+partyNames.size+' party/customer ledgers (Sundry Debtors)\n- Clear Ice Industries (Capital Account)\n\nImport this in Tally FIRST before importing vouchers.');
+  alert('Ledger Master XML exported!\n\n'+count+' ledgers:\n- '+TALLY_CMP.salesLedger+' (Sales)\n- '+gstNames+'\n- Cash Sales, Cash, Round Off\n- '+partyNames.size+' customers (Sundry Debtors)\n\nImport this in Tally FIRST.');
 }
 
 // ========== TALLY STOCK ITEM MASTER XML ==========
 function exportStockMasterXML(){
   if(!stockItems.length){alert('No stock items to export.');return;}
+  let xml='<ENVELOPE>\n <HEADER>\n  <TALLYREQUEST>Import Data</TALLYREQUEST>\n </HEADER>\n';
+  xml+=' <BODY>\n  <IMPORTDATA>\n   <REQUESTDESC>\n    <REPORTNAME>All Masters</REPORTNAME>\n';
+  xml+='    <STATICVARIABLES>\n     <SVCURRENTCOMPANY>'+_escXml(TALLY_CMP.name)+'</SVCURRENTCOMPANY>\n    </STATICVARIABLES>\n';
+  xml+='   </REQUESTDESC>\n   <REQUESTDATA>\n';
 
-  let xml='<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml+='<ENVELOPE>\n';
-  xml+='<HEADER>\n<TALLYREQUEST>Import Data</TALLYREQUEST>\n</HEADER>\n';
-  xml+='<BODY>\n<IMPORTDATA>\n<REQUESTDESC>\n<REPORTNAME>All Masters</REPORTNAME>\n<STATICVARIABLES>\n<SVCURRENTCOMPANY>Clear Ice Industries</SVCURRENTCOMPANY>\n</STATICVARIABLES>\n</REQUESTDESC>\n<REQUESTDATA>\n';
-
-  // 1. Create Stock Groups by category
+  // Stock Groups
   const categories=new Set();
-  stockItems.forEach(item=>{ if(item.cat) categories.add(item.cat); });
+  stockItems.forEach(item=>{if(item.cat)categories.add(item.cat);});
   categories.forEach(cat=>{
-    xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-    xml+=`<STOCKGROUP NAME="${escXml(cat)}" ACTION="Create">\n`;
-    xml+=`<NAME>${escXml(cat)}</NAME>\n`;
-    xml+='<PARENT>Primary</PARENT>\n';
-    xml+='</STOCKGROUP>\n';
-    xml+='</TALLYMESSAGE>\n';
+    xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <STOCKGROUP NAME="'+_escXml(cat)+'" ACTION="Create">\n';
+    xml+='      <NAME>'+_escXml(cat)+'</NAME>\n      <PARENT>Primary</PARENT>\n';
+    xml+='     </STOCKGROUP>\n    </TALLYMESSAGE>\n';
   });
 
-  // 2. Create Units of Measurement
+  // Units
   const units=new Set();
-  stockItems.forEach(item=>{ units.add(item.unit||'Nos'); });
-  const unitFullNames={Nos:'Numbers',Kg:'Kilograms',Bags:'Bags',Block:'Blocks',Litre:'Litres',Ton:'Tonnes'};
+  stockItems.forEach(item=>{units.add(item.unit||'Nos');});
+  const unitNames={Nos:'Numbers',Kg:'Kilograms',kg:'Kilograms',Bags:'Bags',Block:'Blocks',Litre:'Litres',Ton:'Tonnes'};
   units.forEach(unit=>{
-    xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-    xml+=`<UNIT NAME="${escXml(unit)}" ACTION="Create">\n`;
-    xml+=`<NAME>${escXml(unit)}</NAME>\n`;
-    xml+=`<ORIGINALNAME>${escXml(unitFullNames[unit]||unit)}</ORIGINALNAME>\n`;
-    xml+='<ISSIMPLEUNIT>Yes</ISSIMPLEUNIT>\n';
-    xml+='</UNIT>\n';
-    xml+='</TALLYMESSAGE>\n';
+    xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <UNIT NAME="'+_escXml(unit)+'" ACTION="Create">\n';
+    xml+='      <NAME>'+_escXml(unit)+'</NAME>\n      <ORIGINALNAME>'+_escXml(unitNames[unit]||unit)+'</ORIGINALNAME>\n      <ISSIMPLEUNIT>Yes</ISSIMPLEUNIT>\n';
+    xml+='     </UNIT>\n    </TALLYMESSAGE>\n';
   });
 
-  // 3. Create Stock Items
+  // Godown
+  xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <GODOWN NAME="Main Location" ACTION="Create">\n      <NAME>Main Location</NAME>\n      <PARENT>&#4; Primary</PARENT>\n     </GODOWN>\n    </TALLYMESSAGE>\n';
+
+  // Stock Items
   stockItems.forEach(item=>{
-    xml+='<TALLYMESSAGE xmlns:UDF="TallyUDF">\n';
-    xml+=`<STOCKITEM NAME="${escXml(item.name)}" ACTION="Create">\n`;
-    xml+=`<NAME>${escXml(item.name)}</NAME>\n`;
-    xml+=`<PARENT>${escXml(item.cat||'Primary')}</PARENT>\n`;
-    xml+=`<BASEUNITS>${escXml(item.unit||'Nos')}</BASEUNITS>\n`;
-    xml+=`<ADDITIONALUNITS>${escXml(item.unit||'Nos')}</ADDITIONALUNITS>\n`;
+    const gRate=parseFloat(item.gstRate)||5;
+    const halfRate=(gRate/2).toFixed(1);
+    xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <STOCKITEM NAME="'+_escXml(item.name)+'" ACTION="Create">\n';
+    xml+='      <NAME>'+_escXml(item.name)+'</NAME>\n';
+    xml+='      <PARENT>'+_escXml(item.cat||'Primary')+'</PARENT>\n';
+    xml+='      <BASEUNITS>'+_escXml(item.unit||'Nos')+'</BASEUNITS>\n';
+    xml+='      <ADDITIONALUNITS>'+_escXml(item.unit||'Nos')+'</ADDITIONALUNITS>\n';
     if(item.hsn){
-      const gRate=parseFloat(item.gstRate)||5;
-      const halfRate=(gRate/2).toFixed(1);
-      xml+=`<GSTAPPLICABLE>Applicable</GSTAPPLICABLE>\n`;
-      xml+='<GSTTYPEOFSUPPLY>Goods</GSTTYPEOFSUPPLY>\n';
-      xml+=`<HSNCODE>${escXml(item.hsn)}</HSNCODE>\n`;
-      xml+='<GSTDETAILS.LIST>\n';
-      xml+=`<HSNCODE>${escXml(item.hsn)}</HSNCODE>\n`;
-      xml+='<TAXABILITY>Taxable</TAXABILITY>\n';
-      xml+='<STATEWISEDETAILS.LIST>\n';
-      xml+='<STATENAME>Assam</STATENAME>\n';
-      xml+='<RATEDETAILS.LIST>\n';
-      xml+=`<GSTRATE>${gRate}</GSTRATE>\n`;
-      xml+=`<CGSTRATE>${halfRate}</CGSTRATE>\n`;
-      xml+=`<SGSTRATE>${halfRate}</SGSTRATE>\n`;
-      xml+=`<IGSTRATE>${gRate}</IGSTRATE>\n`;
-      xml+='</RATEDETAILS.LIST>\n';
-      xml+='</STATEWISEDETAILS.LIST>\n';
-      xml+='</GSTDETAILS.LIST>\n';
+      xml+='      <GSTAPPLICABLE>Applicable</GSTAPPLICABLE>\n';
+      xml+='      <GSTTYPEOFSUPPLY>Goods</GSTTYPEOFSUPPLY>\n';
+      xml+='      <HSNCODE>'+_escXml(item.hsn)+'</HSNCODE>\n';
+      xml+='      <GSTDETAILS.LIST>\n       <HSNCODE>'+_escXml(item.hsn)+'</HSNCODE>\n       <TAXABILITY>Taxable</TAXABILITY>\n';
+      xml+='       <STATEWISEDETAILS.LIST>\n        <STATENAME>'+_escXml(TALLY_CMP.state)+'</STATENAME>\n';
+      xml+='        <RATEDETAILS.LIST>\n         <GSTRATE>'+gRate+'</GSTRATE>\n         <CGSTRATE>'+halfRate+'</CGSTRATE>\n         <SGSTRATE>'+halfRate+'</SGSTRATE>\n         <IGSTRATE>'+gRate+'</IGSTRATE>\n';
+      xml+='        </RATEDETAILS.LIST>\n       </STATEWISEDETAILS.LIST>\n      </GSTDETAILS.LIST>\n';
     }
-    if(item.rate>0){
-      xml+=`<RATEOFSTOCKITEM>${item.rate.toFixed(2)}/${escXml(item.unit||'Nos')}</RATEOFSTOCKITEM>\n`;
-    }
+    if(item.rate>0) xml+='      <RATEOFSTOCKITEM>'+item.rate.toFixed(2)+'/'+_escXml(item.unit||'Nos')+'</RATEOFSTOCKITEM>\n';
     if(item.qty>0){
-      xml+=`<OPENINGBALANCE>${item.qty} ${escXml(item.unit||'Nos')}</OPENINGBALANCE>\n`;
-      xml+=`<OPENINGVALUE>${(item.qty*item.rate).toFixed(2)}</OPENINGVALUE>\n`;
-      xml+=`<OPENINGRATE>${item.rate.toFixed(2)}/${escXml(item.unit||'Nos')}</OPENINGRATE>\n`;
+      xml+='      <OPENINGBALANCE>'+_fmtQty(item.qty,item.unit||'Nos')+'</OPENINGBALANCE>\n';
+      xml+='      <OPENINGVALUE>'+((item.qty*item.rate).toFixed(2))+'</OPENINGVALUE>\n';
+      xml+='      <OPENINGRATE>'+item.rate.toFixed(2)+'/'+_escXml(item.unit||'Nos')+'</OPENINGRATE>\n';
     }
-    xml+='</STOCKITEM>\n';
-    xml+='</TALLYMESSAGE>\n';
+    xml+='     </STOCKITEM>\n    </TALLYMESSAGE>\n';
   });
 
-  xml+='</REQUESTDATA>\n</IMPORTDATA>\n</BODY>\n</ENVELOPE>';
-
-  // Download
-  const blob=new Blob([xml],{type:'application/xml'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='ClearIce_StockMasters.xml';
-  a.click();
-  URL.revokeObjectURL(a.href);
-
-  alert('Stock Master XML exported!\n\n'+stockItems.length+' stock items + '+categories.size+' stock groups + '+units.size+' units included.\n\nEach item includes:\n- Category (as Stock Group)\n- Unit of Measurement\n- HSN Code with per-item GST rates\n- Opening Balance & Rate\n\nImport this in Tally BEFORE importing vouchers.');
+  xml+='   </REQUESTDATA>\n  </IMPORTDATA>\n </BODY>\n</ENVELOPE>\n';
+  const bom='\uFEFF';
+  const blob=new Blob([bom+xml],{type:'application/xml;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='ClearIce_StockMasters.xml';a.click();URL.revokeObjectURL(a.href);
+  alert('Stock Master XML exported!\n\n'+stockItems.length+' items + '+categories.size+' groups + '+units.size+' units + Godown.\n\nImport in Tally BEFORE importing vouchers.');
 }
-
 function viewVoucher(i){document.getElementById('salePrintContent').innerHTML=buildVoucherHTML(saleVouchers[i]);openModal('salePrintModal');}
 function deleteVoucher(i){
   if(!confirm('Delete voucher '+saleVouchers[i].no+'?')) return;
