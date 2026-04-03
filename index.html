@@ -723,12 +723,40 @@
         <div class="table-card" style="padding:24px;">
           <div style="font-family:'Bebas Neue';font-size:18px;letter-spacing:1px;margin-bottom:20px;">VOUCHER DETAILS</div>
           <div class="form-row"><div class="form-group"><div class="form-label">Voucher No.</div><input class="form-input" id="saleVoucherNo" readonly/></div><div class="form-group"><div class="form-label">Date</div><input class="form-input" id="saleDate" type="date"/></div></div>
-          <div class="form-row"><div class="form-group"><div class="form-label">PO Number</div><input class="form-input" id="salePONumber" placeholder="PO-XXXX (optional)"/></div><div class="form-group"><div class="form-label">Customer / Vendor Name</div><input class="form-input" id="saleCustomer" placeholder="Type or select from vendor master" list="vendorDatalist" oninput="onVendorNameInput(this.value)" autocomplete="off"/><datalist id="vendorDatalist"></datalist></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Reference No.</div><input class="form-input" id="saleRefNo" placeholder="Ref/Invoice No."/></div><div class="form-group"><div class="form-label">PO Number</div><input class="form-input" id="salePONumber" placeholder="PO-XXXX (optional)"/></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Customer / Vendor Name</div><input class="form-input" id="saleCustomer" placeholder="Type or select from vendor master" list="vendorDatalist" oninput="onVendorNameInput(this.value)" autocomplete="off"/><datalist id="vendorDatalist"></datalist></div><div class="form-group"><div class="form-label">Buyer's Order No.</div><input class="form-input" id="saleBuyerOrderNo" placeholder="Optional"/></div></div>
           <div class="form-row"><div class="form-group"><div class="form-label">Phone</div><input class="form-input" id="salePhone" placeholder="9XXXXXXXXX"/></div><div style="display:none"><select id="saleSite"><option value="S1">Main</option></select></div></div>
           <div style="margin-top:-8px;margin-bottom:4px"><button type="button" class="btn btn-secondary btn-sm" onclick="showPage('vendors',null)" style="font-size:11px;padding:4px 10px">🏢 Browse Vendor Master</button></div>
+
+          <!-- GST & Tax Section -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:14px 0 8px;border-top:1px solid var(--main-card-border);padding-top:12px;">GST & TAX</div>
           <div class="form-row"><div class="form-group"><div class="form-label">GST Type</div><select class="form-select" id="saleGstType" onchange="updateGstLabel()"><option value="none">No GST</option><option value="gst" selected>GST (CGST+SGST)</option><option value="igst">IGST (Inter-state)</option></select></div><div class="form-group"><div class="form-label">GST Rate (%)</div><select class="form-select" id="saleGstRate" onchange="recalcSale()"><option value="0">0%</option><option value="5" selected>5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div></div>
-          <div class="form-row single"><div class="form-group"><div class="form-label">Payment Mode</div><select class="form-select" id="salePayMode"><option>Cash</option><option>UPI</option><option>Cheque</option><option>Credit (Party)</option></select></div></div>
-          <div class="form-row single"><div class="form-group"><div class="form-label">Notes</div><input class="form-input" id="saleNotes" placeholder="Optional..."/></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Place of Supply</div><select class="form-select" id="salePlaceOfSupply">
+            <option>Assam</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Bihar</option>
+            <option>Chhattisgarh</option><option>Delhi</option><option>Goa</option><option>Gujarat</option>
+            <option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option>
+            <option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+            <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option>
+            <option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option>
+            <option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+            <option>West Bengal</option><option>Andaman and Nicobar Islands</option><option>Chandigarh</option>
+            <option>Dadra and Nagar Haveli and Daman and Diu</option><option>Jammu and Kashmir</option>
+            <option>Ladakh</option><option>Lakshadweep</option><option>Puducherry</option>
+          </select></div><div class="form-group"><div class="form-label">e-Way Bill No.</div><input class="form-input" id="saleEwayBill" placeholder="Optional"/></div></div>
+
+          <!-- Payment & Dispatch -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:14px 0 8px;border-top:1px solid var(--main-card-border);padding-top:12px;">PAYMENT & DISPATCH</div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Payment Mode</div><select class="form-select" id="salePayMode"><option>Cash</option><option>UPI</option><option>Cheque</option><option>Bank Transfer</option><option>Credit (Party)</option></select></div><div class="form-group"><div class="form-label">Due Date</div><input class="form-input" id="saleDueDate" type="date"/></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Delivery Note No.</div><input class="form-input" id="saleDeliveryNote" placeholder="Optional"/></div><div class="form-group"><div class="form-label">Dispatch No.</div><input class="form-input" id="saleDispatchNo" placeholder="Optional"/></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Transporter Name</div><input class="form-input" id="saleTransporter" placeholder="Optional"/></div><div class="form-group"><div class="form-label">Vehicle No.</div><input class="form-input" id="saleVehicleNo" placeholder="AS01XX1234" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div></div>
+
+          <!-- Consignee -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:14px 0 8px;border-top:1px solid var(--main-card-border);padding-top:12px;">CONSIGNEE (if different)</div>
+          <div class="form-row single"><div class="form-group"><div class="form-label">Consignee Name</div><input class="form-input" id="saleConsigneeName" placeholder="Same as buyer if blank"/></div></div>
+          <div class="form-row single"><div class="form-group"><div class="form-label">Consignee Address</div><input class="form-input" id="saleConsigneeAddr" placeholder="Optional"/></div></div>
+          <div class="form-row"><div class="form-group"><div class="form-label">Consignee State</div><input class="form-input" id="saleConsigneeState" placeholder="Optional"/></div><div class="form-group"><div class="form-label">Consignee GSTIN</div><input class="form-input" id="saleConsigneeGstin" placeholder="Optional" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div></div>
+
+          <div class="form-row single"><div class="form-group"><div class="form-label">Notes / Narration</div><input class="form-input" id="saleNotes" placeholder="Optional..."/></div></div>
         </div>
       </div>
       <div>
@@ -976,43 +1004,108 @@
 <!-- STOCK MODAL -->
 
 
-<!-- VENDOR MODAL -->
+<!-- VENDOR MODAL (Tally Prime Compliant) -->
 <div class="modal-overlay" id="vendorModal">
-  <div class="modal" style="width:580px;">
+  <div class="modal" style="width:680px;max-height:92vh;">
     <div class="modal-header">
       <div class="modal-title" id="vendorModalTitle">ADD VENDOR</div>
+      <span style="font-size:10px;padding:3px 8px;border-radius:12px;background:rgba(74,222,128,0.12);color:#4ade80;font-weight:700;letter-spacing:0.5px;">TALLY PRIME</span>
       <button class="modal-close" onclick="closeModal('vendorModal')">✕</button>
     </div>
+
+    <!-- Section: Basic Info -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin-bottom:10px;margin-top:4px;">BASIC DETAILS</div>
     <div class="form-row">
       <div class="form-group"><div class="form-label">Vendor / Party Name *</div><input class="form-input" id="vName" placeholder="ABC Distributors"/></div>
+      <div class="form-group"><div class="form-label">Alias / Mailing Name</div><input class="form-input" id="vMailingName" placeholder="Same as name if blank"/></div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><div class="form-label">Category</div><select class="form-select" id="vCategory"><option>Retailer</option><option>Wholesaler</option><option>Hotel / Restaurant</option><option>Individual</option><option>Government</option><option>Other</option></select></div>
+      <div class="form-group"><div class="form-label">Ledger Group (Tally)</div><select class="form-select" id="vLedgerGroup"><option value="Sundry Debtors">Sundry Debtors</option><option value="Sundry Creditors">Sundry Creditors</option></select></div>
     </div>
+
+    <!-- Section: Contact -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:18px 0 10px;border-top:1px solid var(--main-card-border);padding-top:14px;">CONTACT DETAILS</div>
     <div class="form-row">
+      <div class="form-group"><div class="form-label">Contact Person</div><input class="form-input" id="vContactPerson" placeholder="Mr. Ramesh Kumar"/></div>
       <div class="form-group"><div class="form-label">Phone *</div><input class="form-input" id="vPhone" placeholder="9XXXXXXXXX" type="tel"/></div>
-      <div class="form-group"><div class="form-label">Email</div><input class="form-input" id="vEmail" placeholder="party@email.com" type="email"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><div class="form-label">GST Registration Type</div><select class="form-select" id="vGstType"><option value="registered">GST Registered</option><option value="unregistered">Unregistered</option><option value="composite">Composite Dealer</option></select></div>
-      <div class="form-group"><div class="form-label">GSTIN</div><input class="form-input" id="vGstin" placeholder="22AAAAA0000A1Z5" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div>
-      <div class="form-group"><div class="form-label">State</div><select class="form-select" id="vState">
-        <option>Assam</option><option>Arunachal Pradesh</option><option>Bihar</option><option>Delhi</option>
-        <option>Gujarat</option><option>Haryana</option><option>Karnataka</option><option>Kerala</option>
-        <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option>
-        <option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Punjab</option>
-        <option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
-        <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option><option>Other</option>
-      </select></div>
+      <div class="form-group"><div class="form-label">Email</div><input class="form-input" id="vEmail" placeholder="party@email.com" type="email"/></div>
+      <div class="form-group"><div class="form-label">Fax</div><input class="form-input" id="vFax" placeholder="Optional"/></div>
+    </div>
+
+    <!-- Section: Address (Tally uses ADDRESS.LIST with up to 4 lines) -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:18px 0 10px;border-top:1px solid var(--main-card-border);padding-top:14px;">MAILING ADDRESS (Tally)</div>
+    <div class="form-row single">
+      <div class="form-group"><div class="form-label">Address Line 1</div><input class="form-input" id="vAddr1" placeholder="Shop/Office No., Building"/></div>
     </div>
     <div class="form-row single">
-      <div class="form-group"><div class="form-label">Address</div><input class="form-input" id="vAddress" placeholder="Street, Town, District"/></div>
+      <div class="form-group"><div class="form-label">Address Line 2</div><input class="form-input" id="vAddr2" placeholder="Street, Area, Landmark"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">City / Town</div><input class="form-input" id="vCity" placeholder="Guwahati"/></div>
+      <div class="form-group"><div class="form-label">District</div><input class="form-input" id="vDistrict" placeholder="Kamrup Metro"/></div>
+    </div>
+    <div class="form-row triple">
+      <div class="form-group"><div class="form-label">Country</div><select class="form-select" id="vCountry"><option>India</option><option>Nepal</option><option>Bangladesh</option><option>Bhutan</option><option>Other</option></select></div>
+      <div class="form-group"><div class="form-label">State *</div><select class="form-select" id="vState">
+        <option>Assam</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Bihar</option>
+        <option>Chhattisgarh</option><option>Delhi</option><option>Goa</option><option>Gujarat</option>
+        <option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option>
+        <option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+        <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option>
+        <option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option>
+        <option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+        <option>West Bengal</option><option>Andaman and Nicobar Islands</option><option>Chandigarh</option>
+        <option>Dadra and Nagar Haveli and Daman and Diu</option><option>Jammu and Kashmir</option>
+        <option>Ladakh</option><option>Lakshadweep</option><option>Puducherry</option><option>Other</option>
+      </select></div>
+      <div class="form-group"><div class="form-label">PIN Code</div><input class="form-input" id="vPincode" placeholder="781026" maxlength="6" pattern="[0-9]{6}"/></div>
+    </div>
+
+    <!-- Section: Tax & Statutory -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:18px 0 10px;border-top:1px solid var(--main-card-border);padding-top:14px;">TAX & STATUTORY DETAILS</div>
+    <div class="form-row triple">
+      <div class="form-group"><div class="form-label">GST Registration Type</div><select class="form-select" id="vGstType" onchange="onVendorGstTypeChange()"><option value="Regular">Regular</option><option value="Unregistered/Consumer">Unregistered / Consumer</option><option value="Composition">Composition Dealer</option><option value="Consumer">Consumer</option><option value="Unknown">Unknown</option></select></div>
+      <div class="form-group"><div class="form-label">GSTIN / UIN</div><input class="form-input" id="vGstin" placeholder="18AIOPG8152B2Z9" maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();autoFillPanFromGstin()"/></div>
+      <div class="form-group"><div class="form-label">PAN</div><input class="form-input" id="vPan" placeholder="AIOPG8152B" maxlength="10" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div>
+    </div>
+
+    <!-- Section: Credit & Payment -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:18px 0 10px;border-top:1px solid var(--main-card-border);padding-top:14px;">CREDIT & PAYMENT TERMS</div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Bill-by-Bill Tracking</div><select class="form-select" id="vBillByBill"><option value="Yes">Yes</option><option value="No">No</option></select></div>
+      <div class="form-group"><div class="form-label">Default Credit Period (days)</div><input class="form-input" id="vCreditPeriod" type="number" placeholder="30" min="0"/></div>
     </div>
     <div class="form-row">
       <div class="form-group"><div class="form-label">Credit Limit (₹)</div><input class="form-input" id="vCreditLimit" type="number" placeholder="0 = no limit"/></div>
-      <div class="form-group"><div class="form-label">Default Payment Mode</div><select class="form-select" id="vPayMode"><option>Cash</option><option>UPI</option><option>Cheque</option><option>Credit (Party)</option></select></div>
+      <div class="form-group"><div class="form-label">Default Payment Mode</div><select class="form-select" id="vPayMode"><option>Cash</option><option>UPI</option><option>Cheque</option><option>Bank Transfer</option><option>Credit (Party)</option></select></div>
     </div>
-    <div class="form-row single">
-      <div class="form-group"><div class="form-label">Notes</div><input class="form-input" id="vNotes" placeholder="Any remarks..."/></div>
+
+    <!-- Section: Bank Details -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:18px 0 10px;border-top:1px solid var(--main-card-border);padding-top:14px;">BANK DETAILS (Optional)</div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Bank Name</div><input class="form-input" id="vBankName" placeholder="State Bank of India"/></div>
+      <div class="form-group"><div class="form-label">Account Number</div><input class="form-input" id="vBankAccNo" placeholder="XXXXXXXXXXXX"/></div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">IFSC Code</div><input class="form-input" id="vBankIfsc" placeholder="SBIN0001234" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div>
+      <div class="form-group"><div class="form-label">Branch</div><input class="form-input" id="vBankBranch" placeholder="Guwahati Main"/></div>
+    </div>
+
+    <!-- Section: Opening Balance -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--main-text-muted);margin:18px 0 10px;border-top:1px solid var(--main-card-border);padding-top:14px;">OPENING BALANCE</div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Opening Balance (₹)</div><input class="form-input" id="vOpeningBal" type="number" step="0.01" placeholder="0.00"/></div>
+      <div class="form-group"><div class="form-label">Balance Type</div><select class="form-select" id="vBalType"><option value="Dr">Debit (Dr)</option><option value="Cr">Credit (Cr)</option></select></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-row single" style="margin-top:12px;">
+      <div class="form-group"><div class="form-label">Notes / Remarks</div><input class="form-input" id="vNotes" placeholder="Any remarks..."/></div>
+    </div>
+
     <div class="form-actions">
       <button class="btn btn-secondary" onclick="closeModal('vendorModal')">Cancel</button>
       <button class="btn btn-primary" id="vendorSaveBtn" onclick="saveVendor()">Add Vendor</button>
@@ -1199,10 +1292,23 @@ const DEFAULT_STOCK = [
 ];
 
 const DEFAULT_VENDORS = [
-  {id:'V001',name:'Barpeta Cold Store',category:'Retailer',phone:'9435011111',email:'',gstin:'',gstType:'unregistered',state:'Assam',address:'Barpeta Town',creditLimit:0,payMode:'Cash',notes:'Regular buyer'},
-  {id:'V002',name:'Guwahati Ice Mart',category:'Wholesaler',phone:'9876500001',email:'gim@example.com',gstin:'18AABCG1234A1Z5',gstType:'registered',state:'Assam',address:'Fancy Bazar, Guwahati',creditLimit:50000,payMode:'Credit (Party)',notes:''},
-  {id:'V003',name:'Hotel Paradise',category:'Hotel / Restaurant',phone:'9101200001',email:'',gstin:'',gstType:'unregistered',state:'Assam',address:'Nalbari',creditLimit:0,payMode:'UPI',notes:'Weekly delivery'}
+  {id:'V001',name:'Barpeta Cold Store',category:'Retailer',phone:'9435011111',email:'',gstin:'',gstType:'Unregistered/Consumer',state:'Assam',address:'Barpeta Town',country:'India',creditLimit:0,payMode:'Cash',notes:'Regular buyer'},
+  {id:'V002',name:'Guwahati Ice Mart',category:'Wholesaler',phone:'9876500001',email:'gim@example.com',gstin:'18AABCG1234A1Z5',gstType:'Regular',state:'Assam',address:'Fancy Bazar, Guwahati',country:'India',creditLimit:50000,payMode:'Credit (Party)',notes:''},
+  {id:'V003',name:'Hotel Paradise',category:'Hotel / Restaurant',phone:'9101200001',email:'',gstin:'',gstType:'Unregistered/Consumer',state:'Assam',address:'Nalbari',country:'India',creditLimit:0,payMode:'UPI',notes:'Weekly delivery'}
 ];
+
+// Migrate old vendor data to Tally Prime compliant format
+function _migrateVendors(list){
+  const gstMap={'registered':'Regular','unregistered':'Unregistered/Consumer','composite':'Composition'};
+  list.forEach(v=>{
+    if(gstMap[v.gstType]) v.gstType=gstMap[v.gstType];
+    if(!v.country) v.country='India';
+    if(!v.ledgerGroup) v.ledgerGroup='Sundry Debtors';
+    if(!v.billByBill) v.billByBill='Yes';
+    if(v.address && !v.addr1) v.addr1=v.address;
+  });
+  return list;
+}
 
 
 // ========== STATE ==========
@@ -2312,9 +2418,22 @@ function saveSaleVoucher(){
     date:document.getElementById('saleDate').value,
     customer, phone:document.getElementById('salePhone').value,
     poNumber:document.getElementById('salePONumber').value.trim(),
+    refNo:(document.getElementById('saleRefNo')||{}).value||'',
+    buyerOrderNo:(document.getElementById('saleBuyerOrderNo')||{}).value||'',
     vendorId:(document.getElementById('saleVendorId')||{}).value||'',
     gstType:type, gstRate:rate,
+    placeOfSupply:(document.getElementById('salePlaceOfSupply')||{}).value||TALLY_CMP.state,
+    ewayBill:(document.getElementById('saleEwayBill')||{}).value||'',
     payMode:document.getElementById('salePayMode').value,
+    dueDate:(document.getElementById('saleDueDate')||{}).value||'',
+    deliveryNote:(document.getElementById('saleDeliveryNote')||{}).value||'',
+    dispatchNo:(document.getElementById('saleDispatchNo')||{}).value||'',
+    transporter:(document.getElementById('saleTransporter')||{}).value||'',
+    vehicleNo:(document.getElementById('saleVehicleNo')||{}).value||'',
+    consigneeName:(document.getElementById('saleConsigneeName')||{}).value||'',
+    consigneeAddr:(document.getElementById('saleConsigneeAddr')||{}).value||'',
+    consigneeState:(document.getElementById('saleConsigneeState')||{}).value||'',
+    consigneeGstin:(document.getElementById('saleConsigneeGstin')||{}).value||'',
     notes:document.getElementById('saleNotes').value,
     items:[...saleCurrentItems], sub, cgst, sgst, igst, grand:totalIncl
   };
@@ -2505,9 +2624,10 @@ function exportVoucherXML(){
     const vendor=vendors.find(x=>x.id===v.vendorId)||null;
     const partyName=v.customer||TALLY_CMP.partyLedger;
     const partyGstin=vendor&&vendor.gstin?vendor.gstin:'';
-    const partyRegType=vendor?(vendor.gstType==='registered'?'Regular':vendor.gstType==='composite'?'Composition':'Unregistered/Consumer'):'Unregistered/Consumer';
+    const partyRegType=vendor?(vendor.gstType||'Regular'):'Unregistered/Consumer';
     const partyState=vendor&&vendor.state?vendor.state:TALLY_CMP.state;
-    const isInterState=partyState!==TALLY_CMP.state;
+    const placeOfSupply=v.placeOfSupply||partyState;
+    const isInterState=placeOfSupply!==TALLY_CMP.state;
     const vDate=_tallyDate(v.date);
     const guid=_uuid();
     const gstRate=v.gstRate||5;
@@ -2536,20 +2656,30 @@ function exportVoucherXML(){
     xml+='      <STATENAME>'+_escXml(partyState)+'</STATENAME>\n';
     xml+='      <NARRATION>'+_escXml(v.customer+(v.phone?' '+v.phone:'')+(v.notes?' '+v.notes:''))+'</NARRATION>\n';
     xml+='      <COUNTRYOFRESIDENCE>India</COUNTRYOFRESIDENCE>\n';
-    xml+='      <PLACEOFSUPPLY>'+_escXml(partyState)+'</PLACEOFSUPPLY>\n';
+    xml+='      <PLACEOFSUPPLY>'+_escXml(placeOfSupply)+'</PLACEOFSUPPLY>\n';
     xml+='      <VOUCHERTYPENAME>Sales</VOUCHERTYPENAME>\n';
     xml+='      <PARTYNAME>'+_escXml(partyName)+'</PARTYNAME>\n';
     xml+='      <GSTREGISTRATION TAXTYPE="GST" TAXREGISTRATION="'+_escXml(TALLY_CMP.gstin)+'">'+_escXml(TALLY_CMP.regName)+'</GSTREGISTRATION>\n';
     xml+='      <CMPGSTIN>'+_escXml(TALLY_CMP.gstin)+'</CMPGSTIN>\n';
     xml+='      <PARTYLEDGERNAME>'+_escXml(partyName)+'</PARTYLEDGERNAME>\n';
     xml+='      <VOUCHERNUMBER>'+_escXml(v.no)+'</VOUCHERNUMBER>\n';
+    // Reference & Order details
+    if(v.refNo) xml+='      <REFERENCE>'+_escXml(v.refNo)+'</REFERENCE>\n';
+    if(v.buyerOrderNo) xml+='      <BASICBUYERORDERNUM>'+_escXml(v.buyerOrderNo)+'</BASICBUYERORDERNUM>\n';
+    // Delivery & Dispatch
+    if(v.deliveryNote) xml+='      <BASICDELIVERYNOTE>'+_escXml(v.deliveryNote)+'</BASICDELIVERYNOTE>\n';
+    if(v.dispatchNo) xml+='      <BASICDISPATCHNO>'+_escXml(v.dispatchNo)+'</BASICDISPATCHNO>\n';
+    if(v.dueDate) xml+='      <BASICDUEDATEOFPYMT>'+_tallyDate(v.dueDate)+'</BASICDUEDATEOFPYMT>\n';
+    // e-Way Bill
+    if(v.ewayBill) xml+='      <EWAYBILLNO>'+_escXml(v.ewayBill)+'</EWAYBILLNO>\n';
     xml+='      <BASICBUYERNAME>'+_escXml(partyName)+'</BASICBUYERNAME>\n';
     xml+='      <CMPGSTREGISTRATIONTYPE>Regular</CMPGSTREGISTRATIONTYPE>\n';
     xml+='      <PARTYMAILINGNAME>'+_escXml(partyName)+'</PARTYMAILINGNAME>\n';
-    xml+='      <CONSIGNEEMAILINGNAME>'+_escXml(partyName)+'</CONSIGNEEMAILINGNAME>\n';
-    xml+='      <CONSIGNEESTATENAME>'+_escXml(partyState)+'</CONSIGNEESTATENAME>\n';
+    xml+='      <CONSIGNEEMAILINGNAME>'+_escXml(v.consigneeName||partyName)+'</CONSIGNEEMAILINGNAME>\n';
+    xml+='      <CONSIGNEESTATENAME>'+_escXml(v.consigneeState||placeOfSupply)+'</CONSIGNEESTATENAME>\n';
     xml+='      <CMPGSTSTATE>'+_escXml(TALLY_CMP.state)+'</CMPGSTSTATE>\n';
     xml+='      <CONSIGNEECOUNTRYNAME>India</CONSIGNEECOUNTRYNAME>\n';
+    if(v.consigneeGstin) xml+='      <CONSIGNEEGSTIN>'+_escXml(v.consigneeGstin)+'</CONSIGNEEGSTIN>\n';
     xml+='      <BASICBASEPARTYNAME>'+_escXml(partyName)+'</BASICBASEPARTYNAME>\n';
     if(partyGstin) xml+='      <PARTYGSTREGISTRATIONTYPE>Regular</PARTYGSTREGISTRATIONTYPE>\n      <PARTYLEDGERGSTIN>'+_escXml(partyGstin)+'</PARTYLEDGERGSTIN>\n';
     xml+='      <NUMBERINGSTYLE>Auto Retain</NUMBERINGSTYLE>\n';
@@ -2560,7 +2690,7 @@ function exportVoucherXML(){
     xml+='      <VCHSTATUSTAXADJUSTMENT>Default</VCHSTATUSTAXADJUSTMENT>\n';
     xml+='      <VCHSTATUSVOUCHERTYPE>Sales</VCHSTATUSVOUCHERTYPE>\n';
     xml+='      <VCHSTATUSTAXUNIT>'+_escXml(TALLY_CMP.regName)+'</VCHSTATUSTAXUNIT>\n';
-    xml+='      <BASICDUEDATEOFPYMT>CASH</BASICDUEDATEOFPYMT>\n';
+    if(!v.dueDate) xml+='      <BASICDUEDATEOFPYMT>CASH</BASICDUEDATEOFPYMT>\n';
     xml+='      <VCHGSTCLASS>'+_na()+'</VCHGSTCLASS>\n';
     xml+='      <VCHENTRYMODE>Item Invoice</VCHENTRYMODE>\n';
 
@@ -2831,8 +2961,23 @@ function exportVoucherXML(){
     // ── GST.LIST ──
     xml+='      <GST.LIST>\n       <PURPOSETYPE>GST</PURPOSETYPE>\n       <STAT.LIST>\n        <PURPOSETYPE>GST</PURPOSETYPE>\n        <STATKEY>'+_na()+'</STATKEY>\n        <ISFETCHEDONLY>No</ISFETCHEDONLY>\n        <ISDELETED>No</ISDELETED>\n        <TALLYCONTENTUSER.LIST>        </TALLYCONTENTUSER.LIST>\n       </STAT.LIST>\n      </GST.LIST>\n';
 
+    // ── Transport Details ──
+    if(v.transporter||v.vehicleNo){
+      xml+='      <EWAYBILLDETAILS.LIST>\n';
+      if(v.transporter) xml+='       <TRANSPORTERNAME>'+_escXml(v.transporter)+'</TRANSPORTERNAME>\n';
+      if(v.vehicleNo) xml+='       <VEHICLENUMBER>'+_escXml(v.vehicleNo)+'</VEHICLENUMBER>\n';
+      xml+='      </EWAYBILLDETAILS.LIST>\n';
+    }
+
+    // ── Consignee Address ──
+    if(v.consigneeAddr){
+      xml+='      <GSTCONSIGNEEADDRESS.LIST>\n';
+      xml+='       <ADDRESS>'+_escXml(v.consigneeAddr)+'</ADDRESS>\n';
+      xml+='      </GSTCONSIGNEEADDRESS.LIST>\n';
+    }
+
     // ── Trailing empty lists ──
-    xml+=_emptyLists(['STKJRNLADDLCOSTDETAILS.LIST','PAYROLLMODEOFPAYMENT.LIST','ATTDRECORDS.LIST','GSTEWAYCONSIGNORADDRESS.LIST','GSTEWAYCONSIGNEEADDRESS.LIST','TEMPGSTRATEDETAILS.LIST','TEMPGSTADVADJUSTED.LIST','GSTBUYERADDRESS.LIST','GSTCONSIGNEEADDRESS.LIST']);
+    xml+=_emptyLists(['STKJRNLADDLCOSTDETAILS.LIST','PAYROLLMODEOFPAYMENT.LIST','ATTDRECORDS.LIST','TEMPGSTRATEDETAILS.LIST','TEMPGSTADVADJUSTED.LIST','GSTBUYERADDRESS.LIST']);
 
     xml+='     </VOUCHER>\n';
     xml+='    </TALLYMESSAGE>\n';
@@ -2852,7 +2997,7 @@ function exportVoucherXML(){
   alert('Exported '+list.length+' vouchers in Tally Prime DayBook format.\n\nImport order:\n1. Ledger Masters first\n2. Stock Masters second\n3. Then this voucher file');
 }
 
-// ========== TALLY LEDGER MASTER XML ==========
+// ========== TALLY LEDGER MASTER XML (Tally Prime 3.0+ Compliant) ==========
 function exportLedgerMasterXML(){
   let xml='<ENVELOPE>\n <HEADER>\n  <TALLYREQUEST>Import Data</TALLYREQUEST>\n </HEADER>\n';
   xml+=' <BODY>\n  <IMPORTDATA>\n   <REQUESTDESC>\n    <REPORTNAME>All Masters</REPORTNAME>\n';
@@ -2861,10 +3006,10 @@ function exportLedgerMasterXML(){
 
   // 1. App Sales ledger
   xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="'+_escXml(TALLY_CMP.salesLedger)+'" ACTION="Create">\n';
-  xml+='      <NAME>'+_escXml(TALLY_CMP.salesLedger)+'</NAME>\n      <PARENT>Sales Accounts</PARENT>\n      <ISBILLWISEON>No</ISBILLWISEON>\n      <AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
+  xml+='      <n>'+_escXml(TALLY_CMP.salesLedger)+'</n>\n      <PARENT>Sales Accounts</PARENT>\n      <ISBILLWISEON>No</ISBILLWISEON>\n      <AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
   xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
 
-  // 2. GST Duty Ledgers - auto-detect all rates
+  // 2. GST Duty Ledgers
   const gstRatesUsed=new Set();
   saleVouchers.forEach(v=>{if(v.gstRate>0)gstRatesUsed.add(v.gstRate);});
   stockItems.forEach(item=>{if(item.gstRate)gstRatesUsed.add(parseFloat(item.gstRate));});
@@ -2878,45 +3023,106 @@ function exportLedgerMasterXML(){
   });
   gstLedgers.forEach(gl=>{
     xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="'+_escXml(gl.name)+'" ACTION="Create">\n';
-    xml+='      <NAME>'+_escXml(gl.name)+'</NAME>\n      <PARENT>Duties &amp; Taxes</PARENT>\n      <TAXTYPE>GST</TAXTYPE>\n';
+    xml+='      <n>'+_escXml(gl.name)+'</n>\n      <PARENT>Duties &amp; Taxes</PARENT>\n      <TAXTYPE>GST</TAXTYPE>\n';
     xml+='      <GSTDUTYHEAD>'+gl.type+'</GSTDUTYHEAD>\n      <ISBILLWISEON>No</ISBILLWISEON>\n      <AFFECTSSTOCK>No</AFFECTSSTOCK>\n';
     xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
   });
 
-  // 3. Cash Sales ledger (party)
+  // 3. Cash Sales ledger
   xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="Cash Sales" ACTION="Create">\n';
-  xml+='      <NAME>Cash Sales</NAME>\n      <PARENT>Sundry Debtors</PARENT>\n      <ISBILLWISEON>Yes</ISBILLWISEON>\n';
+  xml+='      <n>Cash Sales</n>\n      <PARENT>Sundry Debtors</PARENT>\n      <ISBILLWISEON>Yes</ISBILLWISEON>\n';
+  xml+='      <COUNTRYNAME>India</COUNTRYNAME>\n';
   xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
 
   // 4. Cash ledger
   xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="Cash" ACTION="Create">\n';
-  xml+='      <NAME>Cash</NAME>\n      <PARENT>Cash-in-Hand</PARENT>\n';
+  xml+='      <n>Cash</n>\n      <PARENT>Cash-in-Hand</PARENT>\n';
   xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
 
   // 5. Round Off ledger
   xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="Round Off" ACTION="Create">\n';
-  xml+='      <NAME>Round Off</NAME>\n      <PARENT>Indirect Expenses</PARENT>\n      <ROUNDTYPE>Normal Rounding</ROUNDTYPE>\n';
+  xml+='      <n>Round Off</n>\n      <PARENT>Indirect Expenses</PARENT>\n      <ROUNDTYPE>Normal Rounding</ROUNDTYPE>\n';
   xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
 
-  // 6. All customer/vendor party ledgers
+  // 6. Customer/Vendor party ledgers (FULL Tally Prime 3.0+ format)
   const partyNames=new Set();
   saleVouchers.forEach(v=>{if(v.customer)partyNames.add(v.customer);});
   vendors.forEach(v=>{if(v.name)partyNames.add(v.name);});
   partyNames.forEach(name=>{
     const vendor=vendors.find(v=>v.name===name);
+    const group=vendor&&vendor.ledgerGroup?vendor.ledgerGroup:'Sundry Debtors';
     xml+='    <TALLYMESSAGE xmlns:UDF="TallyUDF">\n     <LEDGER NAME="'+_escXml(name)+'" ACTION="Create">\n';
-    xml+='      <NAME>'+_escXml(name)+'</NAME>\n      <PARENT>Sundry Debtors</PARENT>\n      <ISBILLWISEON>Yes</ISBILLWISEON>\n';
+    xml+='      <n>'+_escXml(name)+'</n>\n';
+    xml+='      <PARENT>'+_escXml(group)+'</PARENT>\n';
+    xml+='      <ISBILLWISEON>'+(vendor&&vendor.billByBill==='No'?'No':'Yes')+'</ISBILLWISEON>\n';
     if(vendor){
-      if(vendor.address)xml+='      <ADDRESS>'+_escXml(vendor.address+(vendor.state?', '+vendor.state:''))+'</ADDRESS>\n';
-      if(vendor.state)xml+='      <LEDSTATENAME>'+_escXml(vendor.state)+'</LEDSTATENAME>\n';
-      if(vendor.gstin){
-        xml+='      <PARTYGSTIN>'+_escXml(vendor.gstin)+'</PARTYGSTIN>\n';
-        xml+='      <GSTREGISTRATIONTYPE>'+(vendor.gstType==='composite'?'Composition':'Regular')+'</GSTREGISTRATIONTYPE>\n';
-      }else if(vendor.gstType==='unregistered'){
-        xml+='      <GSTREGISTRATIONTYPE>Unregistered/Consumer</GSTREGISTRATIONTYPE>\n';
+      const mName=vendor.mailingName||vendor.name;
+      xml+='      <MAILINGNAME>'+_escXml(mName)+'</MAILINGNAME>\n';
+      const country=vendor.country||'India';
+      const state=vendor.state||TALLY_CMP.state;
+      // CRITICAL: Without Country+State, GSTIN won't display in Tally
+      xml+='      <COUNTRYNAME>'+_escXml(country)+'</COUNTRYNAME>\n';
+      xml+='      <LEDSTATENAME>'+_escXml(state)+'</LEDSTATENAME>\n';
+      if(vendor.pincode) xml+='      <PINCODE>'+_escXml(vendor.pincode)+'</PINCODE>\n';
+      if(vendor.pan) xml+='      <INCOMETAXNUMBER>'+_escXml(vendor.pan)+'</INCOMETAXNUMBER>\n';
+      if(vendor.phone) xml+='      <LEDGERMOBILE>'+_escXml(vendor.phone)+'</LEDGERMOBILE>\n';
+      if(vendor.email) xml+='      <LEDGEREMAIL>'+_escXml(vendor.email)+'</LEDGEREMAIL>\n';
+      if(vendor.fax) xml+='      <LEDGERFAX>'+_escXml(vendor.fax)+'</LEDGERFAX>\n';
+      if(vendor.contactPerson) xml+='      <LEDGERCONTACT>'+_escXml(vendor.contactPerson)+'</LEDGERCONTACT>\n';
+      if(vendor.creditPeriod>0) xml+='      <PAYMENTTERM>'+vendor.creditPeriod+' Days</PAYMENTTERM>\n';
+      if(vendor.creditLimit>0) xml+='      <CREDITLIMIT>'+vendor.creditLimit.toFixed(2)+'</CREDITLIMIT>\n';
+      // GST Registration (Tally Prime 3.0+ LEDGSTREGDETAILS.LIST)
+      const gstRegType=vendor.gstType||'Regular';
+      if(gstRegType!=='Unknown'){
+        xml+='      <LEDGSTREGDETAILS.LIST>\n';
+        xml+='       <APPLICABLEFROM>20170701</APPLICABLEFROM>\n';
+        xml+='       <GSTREGISTRATIONTYPE>'+_escXml(gstRegType)+'</GSTREGISTRATIONTYPE>\n';
+        xml+='       <STATE>'+_escXml(state)+'</STATE>\n';
+        if(vendor.gstin) xml+='       <GSTIN>'+_escXml(vendor.gstin)+'</GSTIN>\n';
+        xml+='      </LEDGSTREGDETAILS.LIST>\n';
       }
-      if(vendor.phone)xml+='      <LEDGERMOBILE>'+_escXml(vendor.phone)+'</LEDGERMOBILE>\n';
-      if(vendor.email)xml+='      <LEDGEREMAIL>'+_escXml(vendor.email)+'</LEDGEREMAIL>\n';
+      // Mailing Details (LEDMAILINGDETAILS.LIST with ADDRESS.LIST)
+      const hasAddr=vendor.addr1||vendor.addr2||vendor.city||vendor.district||vendor.address;
+      if(hasAddr||vendor.phone||vendor.email){
+        xml+='      <LEDMAILINGDETAILS.LIST>\n';
+        xml+='       <MAILINGNAME>'+_escXml(mName)+'</MAILINGNAME>\n';
+        const addrLines=[];
+        if(vendor.addr1) addrLines.push(vendor.addr1);
+        else if(vendor.address) addrLines.push(vendor.address);
+        if(vendor.addr2) addrLines.push(vendor.addr2);
+        if(vendor.city&&vendor.district) addrLines.push(vendor.city+', '+vendor.district);
+        else if(vendor.city) addrLines.push(vendor.city);
+        else if(vendor.district) addrLines.push(vendor.district);
+        if(addrLines.length){
+          xml+='       <ADDRESS.LIST>\n';
+          addrLines.slice(0,4).forEach(line=>{ xml+='        <ADDRESS>'+_escXml(line)+'</ADDRESS>\n'; });
+          xml+='       </ADDRESS.LIST>\n';
+        }
+        xml+='       <STATE>'+_escXml(state)+'</STATE>\n';
+        xml+='       <COUNTRYNAME>'+_escXml(country)+'</COUNTRYNAME>\n';
+        if(vendor.pincode) xml+='       <PINCODE>'+_escXml(vendor.pincode)+'</PINCODE>\n';
+        if(vendor.phone) xml+='       <PHONENUMBER>'+_escXml(vendor.phone)+'</PHONENUMBER>\n';
+        if(vendor.fax) xml+='       <FAXNUMBER>'+_escXml(vendor.fax)+'</FAXNUMBER>\n';
+        if(vendor.email) xml+='       <EMAIL>'+_escXml(vendor.email)+'</EMAIL>\n';
+        xml+='      </LEDMAILINGDETAILS.LIST>\n';
+      }
+      // Bank Details
+      if(vendor.bankName||vendor.bankAccNo){
+        xml+='      <LEDGERBANKDETAILS.LIST>\n';
+        if(vendor.bankName) xml+='       <BANKNAME>'+_escXml(vendor.bankName)+'</BANKNAME>\n';
+        if(vendor.bankAccNo) xml+='       <ACCOUNTNUMBER>'+_escXml(vendor.bankAccNo)+'</ACCOUNTNUMBER>\n';
+        if(vendor.bankIfsc) xml+='       <IFSCODE>'+_escXml(vendor.bankIfsc)+'</IFSCODE>\n';
+        if(vendor.bankBranch) xml+='       <BANKBRANCH>'+_escXml(vendor.bankBranch)+'</BANKBRANCH>\n';
+        xml+='      </LEDGERBANKDETAILS.LIST>\n';
+      }
+      // Opening Balance
+      if(vendor.openingBal && vendor.openingBal!==0){
+        const obVal=vendor.balType==='Cr'? vendor.openingBal : -vendor.openingBal;
+        xml+='      <OPENINGBALANCE>'+obVal.toFixed(2)+'</OPENINGBALANCE>\n';
+      }
+    } else {
+      xml+='      <COUNTRYNAME>India</COUNTRYNAME>\n';
+      xml+='      <LEDSTATENAME>'+_escXml(TALLY_CMP.state)+'</LEDSTATENAME>\n';
     }
     xml+='     </LEDGER>\n    </TALLYMESSAGE>\n';
   });
@@ -2927,10 +3133,8 @@ function exportLedgerMasterXML(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='ClearIce_LedgerMasters.xml';a.click();URL.revokeObjectURL(a.href);
   const count=4+gstLedgers.length+partyNames.size;
-  const gstNames=gstLedgers.map(g=>g.name).join(', ');
-  alert('Ledger Master XML exported!\n\n'+count+' ledgers:\n- '+TALLY_CMP.salesLedger+' (Sales)\n- '+gstNames+'\n- Cash Sales, Cash, Round Off\n- '+partyNames.size+' customers (Sundry Debtors)\n\nImport this in Tally FIRST.');
+  alert('Ledger Master XML exported (Tally Prime 3.0+)!\n\n'+count+' ledgers with:\n\u2705 Country, State, PIN, PAN\n\u2705 GST Registration (LEDGSTREGDETAILS.LIST)\n\u2705 Mailing Address (LEDMAILINGDETAILS.LIST)\n\u2705 Bank Details, Opening Balance, Credit Period\n\nImport this in Tally FIRST before vouchers.');
 }
-
 // ========== TALLY STOCK ITEM MASTER XML ==========
 function exportStockMasterXML(){
   if(!stockItems.length){alert('No stock items to export.');return;}
@@ -3081,7 +3285,7 @@ function renderVendors(searchVal) {
             '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px;">' +
               '<div class="vendor-card-name">'+esc(v.name)+'</div>' +
               '<span class="vendor-cat-pill '+cc+'">'+esc(v.category||'Other')+'</span>' +
-              (v.gstType==='composite'?'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(250,204,21,0.12);color:#fbbf24;font-weight:700;">Composite</span>':v.gstType==='unregistered'?'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(248,113,113,0.12);color:#f87171;font-weight:700;">Unregistered</span>':'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(74,222,128,0.12);color:#4ade80;font-weight:700;">GST Reg.</span>') +
+              (v.gstType==='Composition'?'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(250,204,21,0.12);color:#fbbf24;font-weight:700;">Composite</span>':v.gstType==='Unregistered/Consumer'||v.gstType==='Consumer'?'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(248,113,113,0.12);color:#f87171;font-weight:700;">Unregistered</span>':'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(74,222,128,0.12);color:#4ade80;font-weight:700;">GST Reg.</span>') +
             '</div>' +
             '<div class="vendor-card-id">'+esc(v.id)+(v.gstin?' &nbsp;·&nbsp; <span class="mono" style="font-size:10px;color:#60a5fa;">'+esc(v.gstin)+'</span>':'')+'</div>' +
           '</div>' +
@@ -3091,8 +3295,9 @@ function renderVendors(searchVal) {
         '<div class="vendor-card-body">' +
           (v.phone ? '<div class="vendor-detail"><span class="vendor-detail-icon">📞</span><span class="vendor-detail-val mono">'+esc(v.phone)+'</span></div>' : '') +
           (v.email ? '<div class="vendor-detail"><span class="vendor-detail-icon">✉</span><span class="vendor-detail-val">'+esc(v.email)+'</span></div>' : '') +
-          (v.address ? '<div class="vendor-detail"><span class="vendor-detail-icon">📍</span><span class="vendor-detail-val">'+esc(v.address)+(v.state?', '+esc(v.state):'')+'</span></div>' :
-            (v.state ? '<div class="vendor-detail"><span class="vendor-detail-icon">📍</span><span class="vendor-detail-val">'+esc(v.state)+'</span></div>' : '')) +
+          (v.address ? '<div class="vendor-detail"><span class="vendor-detail-icon">📍</span><span class="vendor-detail-val">'+esc(v.address)+(v.state?', '+esc(v.state):'')+(v.pincode?' - '+esc(v.pincode):'')+'</span></div>' :
+            (v.state ? '<div class="vendor-detail"><span class="vendor-detail-icon">📍</span><span class="vendor-detail-val">'+esc(v.state)+(v.pincode?' - '+esc(v.pincode):'')+'</span></div>' : '')) +
+          (v.pan ? '<div class="vendor-detail"><span class="vendor-detail-icon">🪪</span><span class="vendor-detail-val mono">PAN: '+esc(v.pan)+'</span></div>' : '') +
           (v.creditLimit>0 ? '<div class="vendor-detail"><span class="vendor-detail-icon">💳</span><span class="vendor-detail-val">Credit limit: '+fmt(v.creditLimit)+'</span></div>' : '') +
           (v.notes ? '<div class="vendor-detail"><span class="vendor-detail-icon">📝</span><span class="vendor-detail-val" style="color:var(--main-text-muted);font-style:italic;">'+esc(v.notes)+'</span></div>' : '') +
         '</div>' +
@@ -3113,16 +3318,32 @@ function renderVendors(searchVal) {
 
 function filterVendors(val) { renderVendors(val !== undefined ? val : (document.getElementById('vendorSearch')||{value:''}).value); }
 
+function autoFillPanFromGstin(){
+  const gstin=document.getElementById('vGstin').value.trim();
+  if(gstin.length>=14){
+    document.getElementById('vPan').value=gstin.substring(2,12);
+  }
+}
+function onVendorGstTypeChange(){
+  const t=document.getElementById('vGstType').value;
+  const gstinEl=document.getElementById('vGstin');
+  if(t==='Unregistered/Consumer'||t==='Consumer'){gstinEl.value='';gstinEl.placeholder='N/A';}
+  else{gstinEl.placeholder='18AIOPG8152B2Z9';}
+}
 function openVendorModal() {
   editVendorIdx = -1;
   document.getElementById('vendorModalTitle').textContent = 'ADD VENDOR';
   document.getElementById('vendorSaveBtn').textContent = 'Add Vendor';
-  ['vName','vPhone','vEmail','vGstin','vAddress','vNotes'].forEach(id => document.getElementById(id).value = '');
+  ['vName','vMailingName','vPhone','vEmail','vFax','vGstin','vPan','vAddr1','vAddr2','vCity','vDistrict','vPincode','vNotes','vContactPerson','vBankName','vBankAccNo','vBankIfsc','vBankBranch','vOpeningBal','vCreditPeriod'].forEach(id => {const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('vCategory').value = 'Retailer';
-  document.getElementById('vGstType').value = 'registered';
+  document.getElementById('vLedgerGroup').value = 'Sundry Debtors';
+  document.getElementById('vGstType').value = 'Regular';
   document.getElementById('vState').value = 'Assam';
+  document.getElementById('vCountry').value = 'India';
   document.getElementById('vCreditLimit').value = '';
   document.getElementById('vPayMode').value = 'Cash';
+  document.getElementById('vBillByBill').value = 'Yes';
+  document.getElementById('vBalType').value = 'Dr';
   openModal('vendorModal');
 }
 
@@ -3132,16 +3353,34 @@ function editVendor(i) {
   document.getElementById('vendorModalTitle').textContent = 'EDIT VENDOR';
   document.getElementById('vendorSaveBtn').textContent = 'Save Changes';
   document.getElementById('vName').value = v.name;
+  document.getElementById('vMailingName').value = v.mailingName || '';
   document.getElementById('vPhone').value = v.phone || '';
   document.getElementById('vEmail').value = v.email || '';
+  document.getElementById('vFax').value = v.fax || '';
+  document.getElementById('vContactPerson').value = v.contactPerson || '';
   document.getElementById('vGstin').value = v.gstin || '';
-  document.getElementById('vGstType').value = v.gstType || 'registered';
-  document.getElementById('vAddress').value = v.address || '';
+  document.getElementById('vPan').value = v.pan || '';
+  document.getElementById('vGstType').value = v.gstType || 'Regular';
+  document.getElementById('vAddr1').value = v.addr1 || v.address || '';
+  document.getElementById('vAddr2').value = v.addr2 || '';
+  document.getElementById('vCity').value = v.city || '';
+  document.getElementById('vDistrict').value = v.district || '';
+  document.getElementById('vPincode').value = v.pincode || '';
   document.getElementById('vNotes').value = v.notes || '';
   document.getElementById('vCategory').value = v.category || 'Retailer';
+  document.getElementById('vLedgerGroup').value = v.ledgerGroup || 'Sundry Debtors';
   document.getElementById('vState').value = v.state || 'Assam';
+  document.getElementById('vCountry').value = v.country || 'India';
   document.getElementById('vCreditLimit').value = v.creditLimit || '';
+  document.getElementById('vCreditPeriod').value = v.creditPeriod || '';
   document.getElementById('vPayMode').value = v.payMode || 'Cash';
+  document.getElementById('vBillByBill').value = v.billByBill || 'Yes';
+  document.getElementById('vBankName').value = v.bankName || '';
+  document.getElementById('vBankAccNo').value = v.bankAccNo || '';
+  document.getElementById('vBankIfsc').value = v.bankIfsc || '';
+  document.getElementById('vBankBranch').value = v.bankBranch || '';
+  document.getElementById('vOpeningBal').value = v.openingBal || '';
+  document.getElementById('vBalType').value = v.balType || 'Dr';
   openModal('vendorModal');
 }
 
@@ -3149,18 +3388,47 @@ function saveVendor() {
   const name = document.getElementById('vName').value.trim();
   const phone = document.getElementById('vPhone').value.trim();
   if (!name) { alert('Vendor Name is required.'); return; }
+  // GSTIN validation
+  const gstin = document.getElementById('vGstin').value.trim();
+  const gstType = document.getElementById('vGstType').value;
+  if(gstType==='Regular' && gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)){
+    if(!confirm('GSTIN "'+gstin+'" may be invalid. Tally requires valid 15-char GSTIN for Regular dealers. Save anyway?')) return;
+  }
+  // Build full address for backward compat
+  const addr1=document.getElementById('vAddr1').value.trim();
+  const addr2=document.getElementById('vAddr2').value.trim();
+  const city=document.getElementById('vCity').value.trim();
+  const district=document.getElementById('vDistrict').value.trim();
+  const fullAddr=[addr1,addr2,city,district].filter(Boolean).join(', ');
+
   const obj = {
     id: editVendorIdx >= 0 ? vendors[editVendorIdx].id : 'V' + Date.now(),
     name,
+    mailingName: document.getElementById('vMailingName').value.trim(),
     phone,
     email: document.getElementById('vEmail').value.trim(),
-    gstin: document.getElementById('vGstin').value.trim(),
-    gstType: document.getElementById('vGstType').value,
+    fax: document.getElementById('vFax').value.trim(),
+    contactPerson: document.getElementById('vContactPerson').value.trim(),
+    gstin,
+    pan: document.getElementById('vPan').value.trim(),
+    gstType,
     state: document.getElementById('vState').value,
-    address: document.getElementById('vAddress').value.trim(),
+    country: document.getElementById('vCountry').value,
+    addr1, addr2, city, district,
+    address: fullAddr,
+    pincode: document.getElementById('vPincode').value.trim(),
     category: document.getElementById('vCategory').value,
+    ledgerGroup: document.getElementById('vLedgerGroup').value,
     creditLimit: parseFloat(document.getElementById('vCreditLimit').value) || 0,
+    creditPeriod: parseInt(document.getElementById('vCreditPeriod').value) || 0,
     payMode: document.getElementById('vPayMode').value,
+    billByBill: document.getElementById('vBillByBill').value,
+    bankName: document.getElementById('vBankName').value.trim(),
+    bankAccNo: document.getElementById('vBankAccNo').value.trim(),
+    bankIfsc: document.getElementById('vBankIfsc').value.trim(),
+    bankBranch: document.getElementById('vBankBranch').value.trim(),
+    openingBal: parseFloat(document.getElementById('vOpeningBal').value) || 0,
+    balType: document.getElementById('vBalType').value,
     notes: document.getElementById('vNotes').value.trim()
   };
   if (editVendorIdx >= 0) vendors[editVendorIdx] = obj; else vendors.push(obj);
@@ -3195,22 +3463,32 @@ function useVendorInSale(i) {
   const v = vendors[i];
   showPage('sales', document.querySelector('.nav-item[onclick*="sales"]'));
   showSalesTab('create', document.querySelector('#page-sales .tab'));
-  // fill fields after a tick so the page renders
   setTimeout(() => {
     document.getElementById('saleCustomer').value = v.name;
     document.getElementById('salePhone').value = v.phone || '';
-    // set pay mode if exists in dropdown
+    // set pay mode
     const pm = document.getElementById('salePayMode');
     if ([...pm.options].some(o => o.value === v.payMode)) pm.value = v.payMode;
-    // set GST type hint based on vendor GST registration and state
+    // Map vendor GST type to voucher GST type
     const gstType = document.getElementById('saleGstType');
     const gstRate = document.getElementById('saleGstRate');
-    if (v.gstType === 'unregistered') { gstType.value = 'none'; }
-    else if (v.gstType === 'composite') { gstType.value = 'none'; }
-    else if (v.state && v.state !== 'Assam') { gstType.value = 'igst'; gstRate.value = '5'; }
+    const regType = v.gstType || 'Regular';
+    if (regType === 'Unregistered/Consumer' || regType === 'Consumer') { gstType.value = 'none'; }
+    else if (regType === 'Composition') { gstType.value = 'none'; }
+    else if (v.state && v.state !== TALLY_CMP.state) { gstType.value = 'igst'; gstRate.value = '5'; }
     else { gstType.value = 'gst'; gstRate.value = '5'; }
     updateGstLabel();
-    // store vendorId on a hidden input for voucher saving
+    // Place of Supply
+    const posEl = document.getElementById('salePlaceOfSupply');
+    if(posEl && v.state) posEl.value = v.state;
+    // Due date from credit period
+    if(v.creditPeriod > 0){
+      const today = new Date();
+      today.setDate(today.getDate() + v.creditPeriod);
+      const dueDateEl = document.getElementById('saleDueDate');
+      if(dueDateEl) dueDateEl.value = today.toISOString().split('T')[0];
+    }
+    // store vendorId
     let hid = document.getElementById('saleVendorId');
     if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='saleVendorId'; document.getElementById('saleDate').parentElement.appendChild(hid); }
     hid.value = v.id;
@@ -3233,11 +3511,15 @@ function onVendorNameInput(val) {
     if ([...pm.options].some(o => o.value === match.payMode)) pm.value = match.payMode;
     const gstType = document.getElementById('saleGstType');
     const gstRate = document.getElementById('saleGstRate');
-    if (match.gstType === 'unregistered') { gstType.value = 'none'; }
-    else if (match.gstType === 'composite') { gstType.value = 'none'; }
-    else if (match.state && match.state !== 'Assam') { gstType.value = 'igst'; gstRate.value = '5'; }
+    const regType = match.gstType || 'Regular';
+    if (regType === 'Unregistered/Consumer' || regType === 'Consumer') { gstType.value = 'none'; }
+    else if (regType === 'Composition') { gstType.value = 'none'; }
+    else if (match.state && match.state !== TALLY_CMP.state) { gstType.value = 'igst'; gstRate.value = '5'; }
     else { gstType.value = 'gst'; gstRate.value = '5'; }
     updateGstLabel();
+    // Place of Supply
+    const posEl = document.getElementById('salePlaceOfSupply');
+    if(posEl && match.state) posEl.value = match.state;
     let hid = document.getElementById('saleVendorId');
     if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='saleVendorId'; document.getElementById('saleDate').parentElement.appendChild(hid); }
     hid.value = match.id;
@@ -3482,7 +3764,7 @@ async function load() {
     attendance   = d.attendance   || {};
     saleVouchers = d.saleVouchers || [];
     saleCounter  = d.saleCounter  || 1;
-    vendors      = d.vendors      || DEFAULT_VENDORS;
+    vendors      = _migrateVendors(d.vendors      || DEFAULT_VENDORS);
     stockJournal = d.stockJournal || [];
     if (d.userList && d.userList.length > 0 && !_cachedUsers) {
       _cachedUsers = d.userList;
@@ -3519,7 +3801,7 @@ function importData() {
         if (!d.employees) throw new Error('Invalid file');
         employees=d.employees||[]; sites=d.sites||[]; loans=d.loans||[];
         stockItems=d.stockItems||[]; attendance=d.attendance||{};
-        saleVouchers=d.saleVouchers||[]; saleCounter=d.saleCounter||1; vendors=d.vendors||DEFAULT_VENDORS; stockJournal=d.stockJournal||[];
+        saleVouchers=d.saleVouchers||[]; saleCounter=d.saleCounter||1; vendors=_migrateVendors(d.vendors||DEFAULT_VENDORS); stockJournal=d.stockJournal||[];
         save(); renderDashboard(); alert('Imported successfully!');
       } catch(err) { alert('Invalid backup file: ' + err.message); }
     };
